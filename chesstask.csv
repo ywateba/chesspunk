@@ -1,4 +1,4 @@
-Title,Body,Status,Priority,Due Date,Labels
+Title,Body,Status,Priority,DueDate,Labels
 "Setup Project Structure & Database","Initialize FastAPI project. Configure SQLAlchemy `database.py`, `models/base.py`. Setup Alembic for migrations.","Todo","P0","2025-12-16","Sprint 1, Infra"
 "Implement User Model & Migrations","Create `User` model (email, username, hashed_password). Run `alembic revision --autogenerate`. Verify SQLite creation.","Todo","P0","2025-12-17","Sprint 1, Database"
 "Implement Authentication Utilities","Install `passlib[bcrypt]`. Create `verify_password` and `get_password_hash` functions. Setup `python-jose` config.","Todo","P1","2025-12-18","Sprint 1, Auth"
