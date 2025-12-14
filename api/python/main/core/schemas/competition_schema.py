@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from typing import List
+from core.schemas.user_schema import User
+from core.schemas.match_schema import Match
+
 
 
 
@@ -15,4 +18,4 @@ class Competition(CompetitionBase):
     players: List[User] = []
     matches: List[Match] = []
     class Config:
-        orm_mode = True
+        from_attributes = True

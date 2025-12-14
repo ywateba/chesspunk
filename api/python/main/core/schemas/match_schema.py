@@ -16,4 +16,4 @@ class Match(MatchBase):
     competition_id: int
     pgn_blueprint: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
