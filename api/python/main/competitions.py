@@ -8,6 +8,17 @@ from auth_utils import get_current_user
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
 
+@router.get("/", response_model=List[schemas.Competition])
+def read_competitions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(models.Competition).offset(skip).limit(limit).all()
+
+@router.get("/{competition_id}", response_model=schemas.Competition)
+def read_competition(competition_id: int, db: Session = Depends(get_db)):
+    db_comp = db.query(models.Competition).filter(models.Competition.id == competition_id).first()
+    if not db_comp:
+        raise HTTPException(status_code=404, detail="Competition not found")
+    return db_comp
+
 @router.post("/", response_model=schemas.Competition)
 def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_comp = models.Competition(name=comp.name)
