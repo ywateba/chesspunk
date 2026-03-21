@@ -49,3 +49,12 @@ class Competition(CompetitionBase):
     matches: List[Match] = []
     class Config:
         orm_mode = True
+
+class PlayerStanding(BaseModel):
+    player: User
+    points: float = 0.0
+    matches_played: int = 0
+    wins: int = 0
+    draws: int = 0
+    losses: int = 0
+    # We don't need orm_mode here because we will build these dictionaries dynamically

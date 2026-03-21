@@ -113,6 +113,49 @@ def join_competition(competition_id: int, db: Session = Depends(get_db), current
         db.refresh(db_comp)
     return db_comp
 
+@app.get("/competitions/{competition_id}/standings", response_model=List[schemas.PlayerStanding])
+def get_standings(competition_id: int, db: Session = Depends(get_db)):
+    db_comp = db.query(models.Competition).filter(models.Competition.id == competition_id).first()
+    if not db_comp:
+        raise HTTPException(status_code=404, detail="Competition not found")
+        
+    # Initialize the standings tracker for all registered players
+    standings = {}
+    for player in db_comp.players:
+        standings[player.id] = {
+            "player": player,
+            "points": 0.0,
+            "matches_played": 0,
+            "wins": 0,
+            "draws": 0,
+            "losses": 0
+        }
+        
+    # Tally up points from all completed matches
+    for match in db_comp.matches:
+        if match.result == models.MatchResult.PENDING:
+            continue
+            
+        w_id, b_id = match.white_player_id, match.black_player_id
+        
+        if w_id in standings and b_id in standings:
+            standings[w_id]["matches_played"] += 1
+            standings[b_id]["matches_played"] += 1
+            
+            if match.result == models.MatchResult.WHITE_WINS:
+                standings[w_id]["wins"] += 1; standings[w_id]["points"] += 1.0
+                standings[b_id]["losses"] += 1
+            elif match.result == models.MatchResult.BLACK_WINS:
+                standings[b_id]["wins"] += 1; standings[b_id]["points"] += 1.0
+                standings[w_id]["losses"] += 1
+            elif match.result == models.MatchResult.DRAW:
+                standings[w_id]["draws"] += 1; standings[w_id]["points"] += 0.5
+                standings[b_id]["draws"] += 1; standings[b_id]["points"] += 0.5
+                
+    # Convert to a list and sort by points descending (and wins as a tie-breaker)
+    standings_list = sorted(standings.values(), key=lambda x: (x["points"], x["wins"]), reverse=True)
+    return standings_list
+
 # --- Match Generation (Simple Round Robin POC) ---
 
 @app.post("/competitions/{competition_id}/generate-matches")
