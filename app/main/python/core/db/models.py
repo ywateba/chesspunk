@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
-from database import Base
+from core.db.database import Base
 import enum
 
 # Association table for Many-to-Many relationship (Players <-> Competitions)

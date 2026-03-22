@@ -1,6 +1,22 @@
 import os
 from setuptools import setup, find_packages
 
+
+from setuptools import setup, find_packages
+
+test_requirements = [
+    "mock",
+    "pytest",
+    "mockito",
+    "moto",
+    "pytest-cov",
+    "pytest-sugar",
+    "requests_mock",
+    "behave",
+    "pyHamcrest",
+    "boto3_mocking",
+]
+
 with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
     requirements = f.read().splitlines()
 
@@ -12,5 +28,5 @@ setup(
     packages=find_packages(where="python"),
     package_dir={"": "python"},
     install_requires=requirements,
-    python_requires=">=3.11",
+    python_requires=">=3.10",
 )

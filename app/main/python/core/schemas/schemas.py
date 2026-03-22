@@ -12,7 +12,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -33,7 +33,7 @@ class Match(MatchBase):
     competition_id: int
     pgn_blueprint: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Competition Schemas ---
 class CompetitionBase(BaseModel):
@@ -48,7 +48,7 @@ class Competition(CompetitionBase):
     players: List[User] = []
     matches: List[Match] = []
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PlayerStanding(BaseModel):
     player: User

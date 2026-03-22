@@ -2,9 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-import models, schemas
-from database import get_db
-from auth_utils import get_current_user
+from core.schemas import schemas
+from core.auth.utils import get_current_user
+from core.db import models
+from core.db.database import get_db
+
+
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
 

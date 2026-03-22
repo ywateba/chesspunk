@@ -1,10 +1,11 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 
 # This creates a file named 'chess.db' in the same folder
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./chess.db")
+engine = None
 
 # connect_args={"check_same_thread": False} is needed only for SQLite
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
