@@ -42,10 +42,7 @@ def test_client(db_session):
     Fixture to create a TestClient with the get_db dependency overridden.
     """
     def override_get_db():
-        try:
-            yield db_session
-        finally:
-            db_session.close()
+        yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)

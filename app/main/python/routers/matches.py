@@ -1,24 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from core.schemas import schemas
-from core.db import models
 from core.db.database import get_db
-
-
+from core.services import match_service
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
 @router.put("/{match_id}", response_model=schemas.Match)
 def update_match_result(match_id: int, match_data: schemas.MatchUpdate, db: Session = Depends(get_db)):
-    db_match = db.query(models.Match).filter(models.Match.id == match_id).first()
-    if not db_match:
-        raise HTTPException(status_code=404, detail="Match not found")
-        
-    db_match.result = match_data.result
-    if match_data.pgn_blueprint:
-        db_match.pgn_blueprint = match_data.pgn_blueprint
-        
-    db.commit()
-    db.refresh(db_match)
-    return db_match
+    return match_service.update_match_result(db, match_id, match_data)

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from core.schemas import schemas
 from core.auth.utils import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
-from core.auth.service import get_user_by_email_or_username, create_user, authenticate_user
+from core.services.auth_service import get_user_by_email_or_username, create_user, authenticate_user
 from core.db.database import get_db
 
 
