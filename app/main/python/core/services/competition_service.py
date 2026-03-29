@@ -1,28 +1,26 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-from core.db.crud import competitions as comp_crud
-from core.db.crud import matches as matches_crud
 from core.db import models
 from core.schemas import schemas
+from core.repositories.base import CompetitionRepository, MatchRepository
 
-async def get_competitions(db: AsyncSession, skip: int = 0, limit: int = 100):
-    return await comp_crud.get_competitions(db, skip=skip, limit=limit)
+async def get_competitions(comp_repo: CompetitionRepository, skip: int = 0, limit: int = 100):
+    return await comp_repo.get_competitions(skip=skip, limit=limit)
 
-async def get_competition(db: AsyncSession, competition_id: int):
-    comp = await comp_crud.get_competition(db, competition_id)
+async def get_competition(comp_repo: CompetitionRepository, competition_id: int):
+    comp = await comp_repo.get_competition(competition_id)
     if not comp:
         raise HTTPException(status_code=404, detail="Competition not found")
     return comp
 
-async def create_competition(db: AsyncSession, comp: schemas.CompetitionCreate):
-    return await comp_crud.create_competition(db, comp)
+async def create_competition(comp_repo: CompetitionRepository, comp: schemas.CompetitionCreate):
+    return await comp_repo.create_competition(comp)
 
-async def join_competition(db: AsyncSession, competition_id: int, current_user: models.User):
-    comp = await get_competition(db, competition_id)
-    return await comp_crud.add_player_to_competition(db, comp, current_user)
+async def join_competition(comp_repo: CompetitionRepository, competition_id: int, current_user: models.User):
+    comp = await get_competition(comp_repo, competition_id)
+    return await comp_repo.add_player_to_competition(comp, current_user)
 
-async def get_standings(db: AsyncSession, competition_id: int):
-    comp = await get_competition(db, competition_id)
+async def get_standings(comp_repo: CompetitionRepository, competition_id: int):
+    comp = await get_competition(comp_repo, competition_id)
     standings = {}
     for player in comp.players:
         standings[player.id] = {
@@ -47,8 +45,8 @@ async def get_standings(db: AsyncSession, competition_id: int):
                 standings[b_id]["draws"] += 1; standings[b_id]["points"] += 0.5
     return sorted(standings.values(), key=lambda x: (x["points"], x["wins"]), reverse=True)
 
-async def generate_matches(db: AsyncSession, competition_id: int):
-    comp = await get_competition(db, competition_id)
+async def generate_matches(comp_repo: CompetitionRepository, match_repo: MatchRepository, competition_id: int):
+    comp = await get_competition(comp_repo, competition_id)
     players = comp.players
     if len(players) < 2:
         raise HTTPException(status_code=400, detail="Not enough players to generate matches")
@@ -56,6 +54,6 @@ async def generate_matches(db: AsyncSession, competition_id: int):
         models.Match(competition_id=competition_id, white_player_id=players[i].id, black_player_id=players[j].id, result="*")
         for i in range(len(players)) for j in range(i + 1, len(players))
     ]
-    await matches_crud.create_matches(db, matches)
-    await comp_crud.update_competition_status(db, comp, "active")
+    await match_repo.create_matches(matches)
+    await comp_repo.update_competition_status(comp, "active")
     return {"message": f"Generated {len(matches)} matches"}

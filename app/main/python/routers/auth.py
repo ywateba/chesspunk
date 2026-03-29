@@ -1,35 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import timedelta
 
 from core.schemas import schemas
 from core.auth.utils import create_access_token
 from core.services.auth_service import get_user_by_email_or_username, create_user, authenticate_user
-from core.db.database import get_db
+from core.dependencies import get_user_repository
+from core.repositories.base import UserRepository
 from core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=schemas.User)
-async def signup(user: schemas.UserCreate, db: AsyncSession = Depends(get_db)):
+async def signup(user: schemas.UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
     # Check if user already exists by email
-    existing_user = await get_user_by_email_or_username(db, user.email)
+    existing_user = await get_user_by_email_or_username(user_repo, user.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     # Check if user already exists by username (if different from email)
     if user.username != user.email:
-        existing_user = await get_user_by_email_or_username(db, user.username)
+        existing_user = await get_user_by_email_or_username(user_repo, user.username)
         if existing_user:
             raise HTTPException(status_code=400, detail="Username already registered")
     
-    db_user = await create_user(db, user)
+    db_user = await create_user(user_repo, user)
     return db_user
 
 @router.post("/login", response_model=schemas.Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
-    user = await authenticate_user(db, form_data.username, form_data.password)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), user_repo: UserRepository = Depends(get_user_repository)):
+    user = await authenticate_user(user_repo, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Bearer"})
         
