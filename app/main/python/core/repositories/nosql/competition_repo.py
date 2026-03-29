@@ -2,6 +2,7 @@ from typing import List, Optional, Any
 from core.repositories.base import CompetitionRepository
 from core.schemas import schemas
 from core.db.documents import CompetitionDocument, UserDocument, MatchDocument
+from bson import ObjectId
 
 class MongoCompetitionRepository(CompetitionRepository):
     async def get_competition(self, competition_id: str) -> Optional[Any]:
@@ -9,7 +10,8 @@ class MongoCompetitionRepository(CompetitionRepository):
         if not comp: return None
         
         # Emulate the explicit SelectInLoad relation fetches from SQLAlchemy for Services natively
-        comp.players = await UserDocument.find({"_id": {"$in": comp.player_ids}}).to_list()
+        object_ids = [ObjectId(pid) for pid in comp.player_ids]
+        comp.players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
         comp.matches = await MatchDocument.find({"competition_id": str(comp.id)}).to_list()
         return comp
 

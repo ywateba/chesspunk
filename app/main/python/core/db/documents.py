@@ -31,3 +31,5 @@ class CompetitionDocument(Document):
     
     class Settings:
         name = "competitions"
+        
+    model_config = {"extra": "allow"}

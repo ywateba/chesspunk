@@ -17,3 +17,4 @@ asyncpg
 motor
 beanie
 pytest-asyncio
+mongomock-motor
