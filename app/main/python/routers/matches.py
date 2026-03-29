@@ -1,3 +1,9 @@
+"""
+Matches Router
+==============
+Handles individual chess match updates including results and PGN uploads.
+"""
+
 from fastapi import APIRouter, Depends
 
 from core.schemas import schemas
@@ -9,4 +15,8 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 
 @router.put("/{match_id}", response_model=schemas.Match)
 async def update_match_result(match_id: int, match_data: schemas.MatchUpdate, match_repo: MatchRepository = Depends(get_match_repository)):
+    """
+    Updates the outcome of a match and attaches optional PGN blueprints simulating raw match persistence operations.
+    Matches are typically generated securely through the Competition routers directly natively.
+    """
     return await match_service.update_match_result(match_repo, match_id, match_data)

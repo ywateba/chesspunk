@@ -1,4 +1,10 @@
 from passlib.context import CryptContext
+"""
+Security Utilities
+==================
+Cryptographic helpers handling JWT generations, password hashing, and token parsing.
+"""
+
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import jwt, JWTError

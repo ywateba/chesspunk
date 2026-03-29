@@ -1,3 +1,10 @@
+"""
+Beanie MongoDB Documents
+========================
+Defines the NoSQL abstractions mirroring SQLAlchemy models natively.
+Uses built-in Pydantic constraints inheriting globally.
+"""
+
 from beanie import Document
 from pydantic import Field
 from typing import List, Optional
