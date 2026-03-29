@@ -14,4 +14,6 @@ python-chess
 alembic
 aiosqlite
 asyncpg
+motor
+beanie
 pytest-asyncio

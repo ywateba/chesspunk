@@ -12,6 +12,8 @@ def parse_cors(v: Any) -> List[str]:
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///test.db"
+    NOSQL_DATABASE_URL: str = "mongodb://localhost:27017/chesspunk"
+    DB_ENGINE: str = "SQL"
     SECRET_KEY: str = "your-super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
