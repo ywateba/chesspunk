@@ -5,105 +5,119 @@ You can copy-paste each "Sprint" block directly into your AI chat window to guid
 ***
 
 # Project Roadmap: Chess Community API
-**Tech Stack:** Python 3.11+, FastAPI, SQLAlchemy (Async/Sync), Pydantic, SQLite (Dev) / PostgreSQL (Prod), Pytest.
+**Tech Stack:** Python 3.10+, FastAPI, SQLAlchemy 2.0 (Async), Alembic, Pydantic, aiosqlite (Dev) / PostgreSQL (Prod), Pytest, Docker.
 
 ---
 
 ## Sprint 1: Foundation, Database & Authentication
-**Goal:** Establish the project structure, database connection, and secure user management system.
+**Status:** Completed ✅
 
 ### Phase 1.1: Environment & Database Setup
-* **Task:** Initialize a new Python project structure with `app/main.py`, `app/core/config.py`, and `app/db/session.py`.
-* **Task:** Configure `SQLAlchemy` with a `Base` class and a dependency `get_db` to yield database sessions.
-* **Task:** Install `alembic` and configure it to handle database migrations.
-* **Task:** Create the `User` model in `app/models/user.py` with fields: `id`, `email` (unique), `username` (unique), `hashed_password`, `is_active`, `created_at`.
-* **Test:** Create a test file `tests/test_db.py` to verify the database connection and table creation.
+- [x] **Task:** Initialize a new Python project structure with `app/main.py`, `app/core/config.py`, and `app/db/session.py`.
+- [x] **Task:** Configure `SQLAlchemy` with a `Base` class and a dependency `get_db` to yield async database sessions.
+- [x] **Task:** Install `alembic` and configure it to handle database migrations.
+- [x] **Task:** Create the `User` model with fields: `id`, `email`, `username`, `hashed_password`, `is_active`, `created_at`.
+- [x] **Test:** Create a test file `tests/test_db.py` to verify the database connection and table creation.
 
 ### Phase 1.2: Authentication System
-* **Task:** Implement password hashing using `passlib[bcrypt]`. Add utility functions `verify_password` and `get_password_hash`.
-* **Task:** Implement JWT token generation using `python-jose`. Create a configuration class to hold `SECRET_KEY` and `ALGORITHM`.
-* **Task:** Create a Pydantic schema `UserCreate` (email, username, password) and `Token` (access_token, token_type).
-* **Task:** Implement API endpoints:
-    * `POST /auth/signup`: Registers a new user.
-    * `POST /auth/login`: Validates credentials and returns a JWT.
-* **Task:** Create a `get_current_user` dependency function that decodes the JWT and retrieves the user from the DB.
-* **Test:** Write `tests/test_auth.py`:
-    * Test successful registration.
-    * Test login with correct/incorrect password.
-    * Test accessing a protected route without a token (should return 401).
+- [x] **Task:** Implement password hashing using `passlib[bcrypt]`. Add utility functions `verify_password` and `get_password_hash`.
+- [x] **Task:** Implement JWT token generation using `python-jose`. Create a configuration class to hold `SECRET_KEY` and `ALGORITHM`.
+- [x] **Task:** Create a Pydantic schema `UserCreate` and `Token`.
+- [x] **Task:** Implement API endpoints (`POST /auth/register`, `POST /auth/login`).
+- [x] **Task:** Create a `get_current_user` dependency function that decodes the JWT and retrieves the user asynchronously.
+- [x] **Test:** Write `tests/test_auth.py` using `httpx.AsyncClient`.
 
 ---
 
 ## Sprint 2: Competitions & Inscriptions
-**Goal:** Allow users to create tournaments and manage participants.
+**Status:** Completed ✅
 
 ### Phase 2.1: Competition Core
-* **Task:** Create `Competition` model with fields: `id`, `name`, `description`, `start_date`, `status` (enum: PLANNED, ACTIVE, FINISHED), `format` (enum: ROUND_ROBIN, SWISS).
-* **Task:** Create a many-to-many association table `competition_participants` linking `User` and `Competition`.
-* **Task:** Implement CRUD endpoints for Competitions:
-    * `POST /competitions/`: Create new (Admin/User).
-    * `GET /competitions/`: List all.
-    * `GET /competitions/{id}`: Get details.
-* **Test:** Write `tests/test_competitions.py` to verify creation and retrieval.
+- [x] **Task:** Create `Competition` model with fields: `id`, `name`, `status`, `format`.
+- [x] **Task:** Create a many-to-many association table linking `User` and `Competition`.
+- [x] **Task:** Implement CRUD endpoints for Competitions.
+- [x] **Test:** Write `tests/test_crud.py` to verify creation and retrieval natively.
 
 ### Phase 2.2: Player Management
-* **Task:** Implement the "Join" logic.
-    * Endpoint: `POST /competitions/{id}/join`.
-    * Validation: Ensure user isn't already joined. Ensure competition status is `PLANNED`.
-* **Task:** Implement `GET /competitions/{id}/participants` to list all players in a tournament.
-* **Task:** Implement `DELETE /competitions/{id}/leave` for users to withdraw before start.
-* **Test:** Write `tests/test_inscriptions.py`:
-    * Test user joining a competition.
-    * Test error when joining the same competition twice.
-    * Test error when joining a closed/active competition.
+- [x] **Task:** Implement the "Join" logic via `POST /competitions/{id}/join`.
+- [x] **Task:** Implement `GET /competitions/{id}/players` to list all participants.
+- [x] **Task:** Implement `DELETE /competitions/{id}/leave` for users to withdraw.
+- [x] **Test:** Write `tests/test_integration.py` for tournament lifecycles.
 
 ---
 
 ## Sprint 3: Match Engine & Results
-**Goal:** Generate match-ups and handle game outcomes.
+**Status:** Completed ✅
 
-### Phase 3.1: Match Model & Generation (Round Robin)
-* **Task:** Create `Match` model with fields: `id`, `competition_id`, `white_player_id`, `black_player_id`, `round_number`, `result` (enum: 1-0, 0-1, 1/2-1/2, PENDING), `pgn_content`.
-* **Task:** Implement a Service method `generate_round_robin_pairings(competition_id)`.
-    * Logic: Use the "Circle Method" or simple iteration to create `Match` records for all players.
-* **Task:** Endpoint: `POST /competitions/{id}/start`.
-    * Action: Sets status to `ACTIVE` and triggers pairing generation.
-* **Test:** Write `tests/test_matchmaking.py`:
-    * Create a competition with 4 players. Trigger start. Verify 6 matches are created (mathematically correct for Single Round Robin).
+### Phase 3.1: Match Model & Generation
+- [x] **Task:** Create `Match` model with fields: `id`, `competition_id`, `white_player_id`, `black_player_id`, `result`, `pgn_content`.
+- [x] **Task:** Implement a Service method to generate pairings.
+- [x] **Task:** Endpoint: `POST /competitions/{id}/rounds` to trigger pairing generation.
+- [x] **Test:** Write `tests/test_matchmaking.py`.
 
 ### Phase 3.2: Results & Standings Logic
-* **Task:** Endpoint: `POST /matches/{id}/result`.
-    * Input: `ResultEnum`.
-    * Validation: Only the players involved or an admin can set the result.
-* **Task:** Implement `StandingsService`.
-    * Logic: Query all matches for a competition.
-    * Loop through players: +1 point for Win, +0.5 for Draw.
-    * Return sorted list by Points (descending).
-* **Task:** Endpoint: `GET /competitions/{id}/standings`.
-* **Test:** Write `tests/test_results.py`:
-    * Simulate a few match results.
-    * Call the standings endpoint and verify the points are calculated correctly.
+- [x] **Task:** Endpoint: `POST /matches/{id}/result` to accept `ResultEnum`.
+- [x] **Task:** Implement `StandingsService` to aggregate match points dynamically.
+- [x] **Task:** Endpoint: `GET /competitions/{id}/standings`.
+- [x] **Test:** Write `tests/test_service.py` verifying programmatic match outcomes.
 
 ---
 
 ## Sprint 4: Polish, Validation & Advanced Features
-**Goal:** Make the app robust, handle data validation, and prepare for frontend.
+**Status:** Completed ✅
 
 ### Phase 4.1: PGN & Data Integrity
-* **Task:** Add `pgn_content` validation.
-    * Use `python-chess` library (optional) or regex to validate the move string in `PUT /matches/{id}/pgn`.
-* **Task:** Refactor Routers. Move code from `main.py` into `app/api/v1/endpoints/` (e.g., `auth.py`, `competitions.py`, `matches.py`) to clean up the codebase.
-* **Task:** Add CORS Middleware to `main.py` to allow requests from `localhost:3000` (React/Vue) or `localhost:5173` (Vite).
+- [x] **Task:** Add `pgn_content` validation integrating `python-chess`.
+- [x] **Task:** Refactor Routers separating dependencies.
+- [x] **Task:** Add CORS Middleware to `main.py`.
 
 ### Phase 4.2: Final Integration & Docker
-* **Task:** Create a comprehensive "Tournament Lifecycle" test in `tests/test_integration.py`.
-    * Scenario: Create User A & B -> Create Comp -> Join -> Start -> Play Match -> Submit Result -> Check Standings.
-* **Task:** Create `Dockerfile` and `docker-compose.yml`.
-    * Service 1: `web` (FastAPI).
-    * Service 2: `db` (Postgres).
-* **Task:** Generate final `requirements.txt` with frozen versions.
+- [x] **Task:** Create a comprehensive "Tournament Lifecycle" test in `tests/test_integration.py`.
+- [x] **Task:** Create `Dockerfile` and `docker-compose.yml` mapped cleanly to an `asyncpg` bindings.
+- [x] **Task:** Migrate testing infrastructure fully to `pytest-asyncio` using `tox`.
+- [x] **Task:** Generate final `requirements.txt`.
 
 ---
 
-### How to use this with Gemini 3:
-Start by pasting the **Project Context** and **Sprint 1** header. Ask Gemini to generate the code for Phase 1.1. Once that code is working and tested, paste Phase 1.2, and so on. This keeps the context window clean and the code high-quality.
+## Sprint 5: API Design & Security Enhancements
+**Status:** Planned 📋
+**Goal:** Harden the API endpoints, enforce structural structural limits, and implement robust permission systems.
+
+### Phase 5.1: Security Middleware & Rate Limiting
+- [ ] **Task:** Implement API rate limiting using Redis-backed logic to prevent brute force or DDoS behaviors.
+- [ ] **Task:** Set up security headers and strict CORS enforcement dynamically inside FastAPI configurations.
+- [ ] **Task:** Implement fine-grained Role-Based Access Control (RBAC) (e.g., differentiating between Admin, Organizer, and Player roles).
+
+### Phase 5.2: API Structure & Diagnostics
+- [ ] **Task:** Enhance OpenAPI documentation with rich schemas, descriptive schema tags, and deep examples.
+- [ ] **Task:** Implement comprehensive logging & monitoring (e.g., Loki/Prometheus hooks).
+- [ ] **Task:** Add structured request validation rules and customized HTTP exception handlers returning semantic `Problem Details`.
+
+---
+
+## Sprint 6: Chess Specific Features
+**Status:** Planned 📋
+**Goal:** Enhance the platform's chess-centric capabilities and native game analysis toolings.
+
+### Phase 6.1: Advanced PGN Parsing & Engine Integrations
+- [ ] **Task:** Create endpoints to batch upload and bulk-parse multi-game PGN tournament files into the database.
+- [ ] **Task:** Integrate an asynchronous Stockfish microservice or subprocess to automatically evaluate games and flag critical blunders/brilliancies.
+
+### Phase 6.2: Elo Management & Complex Matchmaking
+- [ ] **Task:** Implement standard Elo/Glicko-2 calculation logic to update player ratings natively at the conclusion of tracked tournaments.
+- [ ] **Task:** Upgrade the Swiss matchmaking algorithm to support sophisticated FIDE rules (Buchholz tie-breakers, color-history balancing).
+
+---
+
+## Sprint 7: Community Management
+**Status:** Planned 📋
+**Goal:** Build out social features and organizational hierarchies for large communities.
+
+### Phase 7.1: Clubs & Organizational Roles
+- [ ] **Task:** Create `Club` models and relational structures defining membership states.
+- [ ] **Task:** Implement API controls allowing users to request entry, and Organizers to Moderate/Accept entries.
+- [ ] **Task:** Map Competitions topologically to Clubs entirely restricting tournament visibility to specific communities.
+
+### Phase 7.2: Forums, Comments & Push Notifications
+- [ ] **Task:** Add a basic real-time messaging or commenting architecture for Matches and Tournament threads.
+- [ ] **Task:** Implement WebSockets for real-time push-polling systems (Match Start updates, Tournament Completion banners).

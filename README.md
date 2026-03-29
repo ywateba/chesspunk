@@ -99,17 +99,39 @@ For this POC, the system supports two main formats:
 
 ## 🚀 Getting Started (Dev)
 
-*Instructions to run the API locally.*
+### 🐳 Running with Docker (Recommended)
+You can launch the fully containerized API and PostgreSQL database locally using Docker Compose.
 
-1.  Clone the repository.
-2.  Install dependencies:
-    ```bash
-    # Command to install (e.g., npm install, pip install, go mod download)
-    ```
-3.  Configure Environment Variables:
-    * `DB_CONNECTION_STRING`
-    * `JWT_SECRET`
-4.  Run the server:
-    ```bash
-    # Command to start server
-    ```
+1. Clone the repository.
+2. Execute the compose stack:
+   ```bash
+   docker compose up -d --build
+   ```
+3. The API will be available at `http://localhost:8000`. Auto-migrations will be applied instantly on startup via Alembic.
+4. View the Swagger documentation at `http://localhost:8000/docs`.
+
+### 🐍 Running Locally (Without Docker)
+To run the project natively using the local SQLite database configured for development:
+
+1. Clone the repository and navigate to `app/`.
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Execute database migrations (Alembic):
+   ```bash
+   alembic upgrade head
+   ```
+4. Start the FastAPI server:
+   ```bash
+   cd main/python
+   uvicorn routers.main:app --reload
+   ```
+
+## 🧪 Running Tests
+The testing suite evaluates 100% of the asynchronous routing and CRUD topologies natively using `pytest-asyncio` and `httpx`.
+To execute the tests in an isolated environment using `tox`:
+```bash
+cd app
+tox
+```
