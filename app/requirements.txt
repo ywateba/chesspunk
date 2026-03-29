@@ -11,5 +11,6 @@ psycopg2-binary
 pytest
 httpx
 python-chess
+alembic
 aiosqlite
 pytest-asyncio

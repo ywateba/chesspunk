@@ -9,9 +9,7 @@ from core.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create the database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
+    # Setup resources on App Startup (No automatic DB table generation)
     yield
 
 app = FastAPI(title="Chess Community API", lifespan=lifespan)
