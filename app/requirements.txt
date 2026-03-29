@@ -13,4 +13,5 @@ httpx
 python-chess
 alembic
 aiosqlite
+asyncpg
 pytest-asyncio

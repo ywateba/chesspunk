@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
@@ -11,8 +11,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire project code
 COPY . .
 
-# Switch to the main directory so imports resolve correctly (e.g. `import models`)
-WORKDIR /app/main
+# Ensure Python can resolve modules correctly
+ENV PYTHONPATH=/app/main/python
 
-# Expose the port and start the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Configure the working directory specifically to execution root
+WORKDIR /app
+
+# Run Alembic migrations and then start the API locally resolving from --app-dir
+CMD ["sh", "-c", "alembic upgrade head && uvicorn routers.main:app --app-dir /app/main/python --host 0.0.0.0 --port 8000"]
