@@ -13,6 +13,8 @@ from routers.main import app
 # Use an in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///test.db")
 
+print(f"Using test database at: {SQLALCHEMY_DATABASE_URL}")
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )

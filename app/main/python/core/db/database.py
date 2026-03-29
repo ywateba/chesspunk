@@ -4,7 +4,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 
 # This creates a file named 'chess.db' in the same folder
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./chess.db")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///test.db")
 engine = None
 
 # connect_args={"check_same_thread": False} is needed only for SQLite

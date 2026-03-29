@@ -11,7 +11,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 class Token(BaseModel):
@@ -32,7 +32,7 @@ class Match(MatchBase):
     id: int
     competition_id: int
     pgn_blueprint: Optional[str] = None
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 # --- Competition Schemas ---
@@ -47,7 +47,7 @@ class Competition(CompetitionBase):
     status: str
     players: List[User] = []
     matches: List[Match] = []
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 class PlayerStanding(BaseModel):

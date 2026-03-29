@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from core.schemas import schemas
-from core.auth.utils import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_password_hash, verify_password
-from core.db import models
+from core.auth.utils import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
+from core.auth.service import get_user_by_email_or_username, create_user, authenticate_user
 from core.db.database import get_db
 
 
@@ -13,20 +13,24 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=schemas.User)
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter((models.User.email == user.email) | (models.User.username == user.username)).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email or username already registered")
-        
-    db_user = models.User(username=user.username, email=user.email, hashed_password=get_password_hash(user.password))
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    # Check if user already exists by email
+    existing_user = get_user_by_email_or_username(db, user.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Check if user already exists by username (if different from email)
+    if user.username != user.email:
+        existing_user = get_user_by_email_or_username(db, user.username)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already registered")
+    
+    db_user = create_user(db, user)
     return db_user
 
 @router.post("/login", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter((models.User.email == form_data.username) | (models.User.username == form_data.username)).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Bearer"})
         
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
