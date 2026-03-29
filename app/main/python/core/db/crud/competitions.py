@@ -1,29 +1,35 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from core.db import models
 from core.schemas import schemas
 
-def get_competition(db: Session, competition_id: int):
-    return db.query(models.Competition).filter(models.Competition.id == competition_id).first()
+async def get_competition(db: AsyncSession, competition_id: int):
+    result = await db.execute(
+        select(models.Competition)
+        .options(selectinload(models.Competition.players), selectinload(models.Competition.matches))
+        .where(models.Competition.id == competition_id)
+    )
+    return result.scalars().first()
 
-def get_competitions(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Competition).offset(skip).limit(limit).all()
+async def get_competitions(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(models.Competition).offset(skip).limit(limit))
+    return result.scalars().all()
 
-def create_competition(db: Session, comp: schemas.CompetitionCreate):
+async def create_competition(db: AsyncSession, comp: schemas.CompetitionCreate):
     db_comp = models.Competition(name=comp.name)
     db.add(db_comp)
-    db.commit()
-    db.refresh(db_comp)
-    return db_comp
+    await db.commit()
+    return await get_competition(db, db_comp.id)
 
-def add_player_to_competition(db: Session, db_comp: models.Competition, user: models.User):
+async def add_player_to_competition(db: AsyncSession, db_comp: models.Competition, user: models.User):
+    # Relies on players being loaded via selectinload initially
     if user not in db_comp.players:
         db_comp.players.append(user)
-        db.commit()
-        db.refresh(db_comp)
-    return db_comp
+        await db.commit()
+    return await get_competition(db, db_comp.id)
 
-def update_competition_status(db: Session, db_comp: models.Competition, status: str):
+async def update_competition_status(db: AsyncSession, db_comp: models.Competition, status: str):
     db_comp.status = status
-    db.commit()
-    db.refresh(db_comp)
-    return db_comp
+    await db.commit()
+    return await get_competition(db, db_comp.id)

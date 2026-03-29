@@ -2,6 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
+pydantic-settings
 passlib[bcrypt]
 bcrypt<4.0.0
 python-jose[cryptography]
@@ -10,3 +11,5 @@ psycopg2-binary
 pytest
 httpx
 python-chess
+aiosqlite
+pytest-asyncio
