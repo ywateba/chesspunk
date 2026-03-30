@@ -28,6 +28,9 @@ class UserRepository(ABC):
     @abstractmethod
     async def create_user(self, user: schemas.UserCreate, hashed_password: str) -> Any: pass
 
+    @abstractmethod
+    async def update_user_elo(self, user_id: Any, new_elo: int) -> Optional[Any]: pass
+
 class CompetitionRepository(ABC):
     """
     Evaluates strictly bound tournament executions requiring precise mapping

@@ -57,3 +57,14 @@ class SQLUserRepository(UserRepository):
         await self.db.commit()
         await self.db.refresh(db_user)
         return db_user
+
+    async def update_user_elo(self, user_id: int, new_elo: int) -> Optional[models.User]:
+        """
+        Calculates and commits discrete int-based Elo adjustments globally.
+        """
+        user = await self.get_user(user_id)
+        if user:
+            user.elo = new_elo
+            await self.db.commit()
+            await self.db.refresh(user)
+        return user

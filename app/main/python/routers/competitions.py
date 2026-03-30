@@ -11,8 +11,8 @@ from typing import List
 from core.schemas import schemas
 from core.auth.utils import get_current_user, RoleChecker
 from core.db import models
-from core.dependencies import get_competition_repository, get_match_repository
-from core.repositories.base import CompetitionRepository, MatchRepository
+from core.dependencies import get_competition_repository, get_match_repository, get_user_repository
+from core.repositories.base import CompetitionRepository, MatchRepository, UserRepository
 from core.services import competition_service
 from core.rate_limit import limiter
 
@@ -62,3 +62,11 @@ async def generate_matches(request: Request, competition_id: int, comp_repo: Com
     Locks the competition and seeds a Round Robin matrix scheduling explicit matchups.
     """
     return await competition_service.generate_matches(comp_repo, match_repo, competition_id)
+
+@router.post("/{competition_id}/finish", summary="Finish competition and formulate Elo")
+@limiter.limit("2/minute")
+async def finish_competition(request: Request, competition_id: int, comp_repo: CompetitionRepository = Depends(get_competition_repository), user_repo: UserRepository = Depends(get_user_repository), current_user: models.User = Depends(RoleChecker(["admin", "organizer"]))):
+    """
+    Safely terminates actively running tournament lifecycles dynamically allocating mathematically standard algorithmic Elo properties.
+    """
+    return await competition_service.finish_competition(comp_repo, user_repo, competition_id)

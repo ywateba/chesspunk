@@ -44,3 +44,13 @@ class MongoUserRepository(UserRepository):
             hashed_password=hashed_password
         )
         return await db_user.insert()
+
+    async def update_user_elo(self, user_id: str, new_elo: int) -> Optional[Any]:
+        """
+        Directly saves delta points safely maintaining embedded structure validations.
+        """
+        user = await self.get_user(user_id)
+        if user:
+            user.elo = new_elo
+            await user.save()
+        return user

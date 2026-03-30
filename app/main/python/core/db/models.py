@@ -24,6 +24,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String, default="player")
+    elo = Column(Integer, default=1200)
     
     # Relationships
     competitions = relationship("Competition", secondary=competition_players, back_populates="players")
@@ -33,6 +34,7 @@ class Competition(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    format = Column(String, default="round_robin")
     status = Column(String, default="open") # open, active, finished
     
     # Relationships

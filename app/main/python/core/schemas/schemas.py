@@ -6,6 +6,7 @@ class UserBase(BaseModel):
     username: str
     email: str
     role: str = "player"
+    elo: int = 1200
 
 class UserCreate(UserBase):
     password: str
@@ -15,6 +16,7 @@ class UserCreate(UserBase):
                 "username": "grandmaster",
                 "email": "gm@chess.com",
                 "role": "player",
+                "elo": 1200,
                 "password": "strongPassword123!"
             }
         }
@@ -57,6 +59,7 @@ class Match(MatchBase):
 # --- Competition Schemas ---
 class CompetitionBase(BaseModel):
     name: str
+    format: str = "round_robin"
 
 class CompetitionCreate(CompetitionBase):
     model_config = {
@@ -78,6 +81,7 @@ class Competition(CompetitionBase):
 class PlayerStanding(BaseModel):
     player: User
     points: float = 0.0
+    buchholz: float = 0.0
     matches_played: int = 0
     wins: int = 0
     draws: int = 0

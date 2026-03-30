@@ -15,6 +15,7 @@ class UserDocument(Document):
     username: str
     hashed_password: str
     role: str = "player"
+    elo: int = 1200
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
