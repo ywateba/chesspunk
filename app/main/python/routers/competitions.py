@@ -5,15 +5,16 @@ Manages chess tournament lifecycles including player registration, standings,
 and match generations securely isolated through dependency repositories.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from typing import List
 
 from core.schemas import schemas
-from core.auth.utils import get_current_user
+from core.auth.utils import get_current_user, RoleChecker
 from core.db import models
 from core.dependencies import get_competition_repository, get_match_repository
 from core.repositories.base import CompetitionRepository, MatchRepository
 from core.services import competition_service
+from core.rate_limit import limiter
 
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
@@ -32,8 +33,9 @@ async def read_competition(competition_id: int, comp_repo: CompetitionRepository
     """
     return await competition_service.get_competition(comp_repo, competition_id)
 
-@router.post("/", response_model=schemas.Competition)
-async def create_competition(comp: schemas.CompetitionCreate, comp_repo: CompetitionRepository = Depends(get_competition_repository), current_user: models.User = Depends(get_current_user)):
+@router.post("/", response_model=schemas.Competition, summary="Create a competition")
+@limiter.limit("5/minute")
+async def create_competition(request: Request, comp: schemas.CompetitionCreate, comp_repo: CompetitionRepository = Depends(get_competition_repository), current_user: models.User = Depends(RoleChecker(["admin", "organizer"]))):
     """
     Initialize a new competition strictly requiring an authenticated creator session.
     """
@@ -53,8 +55,9 @@ async def get_standings(competition_id: int, comp_repo: CompetitionRepository = 
     """
     return await competition_service.get_standings(comp_repo, competition_id)
 
-@router.post("/{competition_id}/generate-matches")
-async def generate_matches(competition_id: int, comp_repo: CompetitionRepository = Depends(get_competition_repository), match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(get_current_user)):
+@router.post("/{competition_id}/generate-matches", summary="Generate matches")
+@limiter.limit("2/minute")
+async def generate_matches(request: Request, competition_id: int, comp_repo: CompetitionRepository = Depends(get_competition_repository), match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(RoleChecker(["admin", "organizer"]))):
     """
     Locks the competition and seeds a Round Robin matrix scheduling explicit matchups.
     """

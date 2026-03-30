@@ -4,7 +4,7 @@ Authentication Router
 Handles user signup, login, and bearer token generation.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
@@ -14,11 +14,13 @@ from core.services.auth_service import get_user_by_email_or_username, create_use
 from core.dependencies import get_user_repository
 from core.repositories.base import UserRepository
 from core.config import settings
+from core.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/signup", response_model=schemas.User)
-async def signup(user: schemas.UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
+@router.post("/signup", response_model=schemas.User, summary="Register a user", description="Creates a new user profile.")
+@limiter.limit("5/minute")
+async def signup(request: Request, user: schemas.UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
     """
     Register a new user in the system.
     
@@ -40,8 +42,9 @@ async def signup(user: schemas.UserCreate, user_repo: UserRepository = Depends(g
     db_user = await create_user(user_repo, user)
     return db_user
 
-@router.post("/login", response_model=schemas.Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), user_repo: UserRepository = Depends(get_user_repository)):
+@router.post("/login", response_model=schemas.Token, summary="Login and get token", description="Authenticates and returns JWT")
+@limiter.limit("10/minute")
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), user_repo: UserRepository = Depends(get_user_repository)):
     """
     Authenticate a user via username and password, returning a JWT access token.
     """

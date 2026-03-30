@@ -10,6 +10,11 @@ async def test_full_matchmaking_lifecycle(test_client: AsyncClient, db_session: 
     for i in range(1, 4):
         await test_client.post("/auth/signup", json={"username": f"player{i}", "email": f"p{i}@test.com", "password": "pass"})
     
+    res = await db_session.execute(select(models.User).where(models.User.username == "player1"))
+    u = res.scalars().first()
+    u.role = "admin"
+    await db_session.commit()
+
     # Login to get tokens
     t1 = (await test_client.post("/auth/login", data={"username": "player1", "password": "pass"})).json()["access_token"]
     t2 = (await test_client.post("/auth/login", data={"username": "player2", "password": "pass"})).json()["access_token"]
@@ -37,9 +42,9 @@ async def test_full_matchmaking_lifecycle(test_client: AsyncClient, db_session: 
     m1, m2, m3 = matches
     
     # 5. Update Results
-    await test_client.put(f"/matches/{m1.id}", json={"result": "1-0"})
-    await test_client.put(f"/matches/{m2.id}", json={"result": "1/2-1/2"})
-    await test_client.put(f"/matches/{m3.id}", json={"result": "0-1"})
+    await test_client.put(f"/matches/{m1.id}", json={"result": "1-0"}, headers={"Authorization": f"Bearer {t1}"})
+    await test_client.put(f"/matches/{m2.id}", json={"result": "1/2-1/2"}, headers={"Authorization": f"Bearer {t1}"})
+    await test_client.put(f"/matches/{m3.id}", json={"result": "0-1"}, headers={"Authorization": f"Bearer {t1}"})
     
     # 6. Fetch Standings
     stand_res = await test_client.get(f"/competitions/{comp_id}/standings")

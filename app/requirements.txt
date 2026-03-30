@@ -18,3 +18,6 @@ motor
 beanie
 pytest-asyncio
 mongomock-motor
+slowapi
+prometheus-fastapi-instrumentator
+structlog

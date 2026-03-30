@@ -48,8 +48,7 @@ class SQLCompetitionRepository(CompetitionRepository):
         db_comp = models.Competition(**comp.model_dump())
         self.db.add(db_comp)
         await self.db.commit()
-        await self.db.refresh(db_comp)
-        return db_comp
+        return await self.get_competition(db_comp.id)
 
     async def add_player_to_competition(self, db_comp: models.Competition, user: models.User) -> models.Competition:
         """
@@ -58,8 +57,7 @@ class SQLCompetitionRepository(CompetitionRepository):
         if user not in db_comp.players:
             db_comp.players.append(user)
             await self.db.commit()
-            await self.db.refresh(db_comp)
-        return db_comp
+        return await self.get_competition(db_comp.id)
         
     async def update_competition_status(self, db_comp: models.Competition, status: str) -> models.Competition:
         """
@@ -67,5 +65,4 @@ class SQLCompetitionRepository(CompetitionRepository):
         """
         db_comp.status = status
         await self.db.commit()
-        await self.db.refresh(db_comp)
-        return db_comp
+        return await self.get_competition(db_comp.id)

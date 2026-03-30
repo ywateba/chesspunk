@@ -23,6 +23,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    role = Column(String, default="player")
     
     # Relationships
     competitions = relationship("Competition", secondary=competition_players, back_populates="players")

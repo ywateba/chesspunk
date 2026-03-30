@@ -5,9 +5,20 @@ from typing import List, Optional
 class UserBase(BaseModel):
     username: str
     email: str
+    role: str = "player"
 
 class UserCreate(UserBase):
     password: str
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "username": "grandmaster",
+                "email": "gm@chess.com",
+                "role": "player",
+                "password": "strongPassword123!"
+            }
+        }
+    }
 
 class User(UserBase):
     id: int
@@ -27,6 +38,14 @@ class MatchBase(BaseModel):
 class MatchUpdate(BaseModel):
     result: str
     pgn_blueprint: Optional[str] = None
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "result": "1-0",
+                "pgn_blueprint": "1. e4 e5 2. Nf3"
+            }
+        }
+    }
 
 class Match(MatchBase):
     id: int
@@ -40,7 +59,13 @@ class CompetitionBase(BaseModel):
     name: str
 
 class CompetitionCreate(CompetitionBase):
-    pass
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Winter Regional Championship"
+            }
+        }
+    }
 
 class Competition(CompetitionBase):
     id: int

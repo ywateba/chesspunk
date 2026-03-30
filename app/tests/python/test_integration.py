@@ -9,6 +9,11 @@ async def test_full_tournament_lifecycle(test_client: AsyncClient, db_session: A
     await test_client.post("/auth/signup", json={"username": "alice", "email": "alice@test.com", "password": "pass"})
     await test_client.post("/auth/signup", json={"username": "bob", "email": "bob@test.com", "password": "pass"})
 
+    res = await db_session.execute(select(models.User).where(models.User.username == "alice"))
+    u = res.scalars().first()
+    u.role = "organizer"
+    await db_session.commit()
+
     # 2. Login Users
     token_alice = (await test_client.post("/auth/login", data={"username": "alice", "password": "pass"})).json()["access_token"]
     token_bob = (await test_client.post("/auth/login", data={"username": "bob", "password": "pass"})).json()["access_token"]

@@ -16,14 +16,14 @@ from core.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/me", response_model=schemas.User)
+@router.get("/me", response_model=schemas.User, summary="Get current user profile")
 async def read_users_me(current_user: models.User = Depends(get_current_user)):
     """
     Retrieve the profile of the currently authenticated user safely verified through tokens.
     """
     return current_user
 
-@router.get("/", response_model=List[schemas.User])
+@router.get("/", response_model=List[schemas.User], summary="Get paginated users")
 async def read_users(skip: int = 0, limit: int = 100, user_repo: UserRepository = Depends(get_user_repository)):
     """
     Retrieve a paginated list of all users registered in the repository databases.

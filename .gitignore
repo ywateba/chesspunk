@@ -146,3 +146,4 @@ Thumbs.db
 *.db
 *.sqlite
 .docker/
+__pycache__/

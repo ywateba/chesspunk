@@ -54,6 +54,13 @@ async def test_create_competition_unauthorized(test_client: AsyncClient, db_sess
 async def test_create_and_join_competition_authorized(test_client: AsyncClient, db_session: AsyncSession):
     await test_client.post("/auth/signup", json={"username": "testuser", "email": "test@example.com", "password": "secretpassword"})
     
+    from core.db import models
+    from sqlalchemy.future import select
+    res = await db_session.execute(select(models.User).where(models.User.username == "testuser"))
+    u = res.scalars().first()
+    u.role = "admin"
+    await db_session.commit()
+    
     login_res = await test_client.post("/auth/login", data={"username": "testuser", "password": "secretpassword"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
