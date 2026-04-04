@@ -60,6 +60,7 @@ class Match(MatchBase):
 class CompetitionBase(BaseModel):
     name: str
     format: str = "round_robin"
+    community_id: Optional[int] = None
 
 class CompetitionCreate(CompetitionBase):
     model_config = {
@@ -87,3 +88,53 @@ class PlayerStanding(BaseModel):
     draws: int = 0
     losses: int = 0
     # We don't need orm_mode here because we will build these dictionaries dynamically
+
+# --- Community Schemas ---
+class CommunityBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class CommunityCreate(CommunityBase):
+    pass
+
+class CommunityMemberSchema(BaseModel):
+    user_id: int
+    role: str
+    rank: int
+    class ConfigDict:
+        from_attributes = True
+
+class Community(CommunityBase):
+    id: int
+    owner_id: int
+    members: List[CommunityMemberSchema] = []
+    class ConfigDict:
+        from_attributes = True
+
+# --- Social Schemas ---
+class PostBase(BaseModel):
+    content: str
+
+class PostCreate(PostBase):
+    pass
+
+class Post(PostBase):
+    id: int
+    community_id: int
+    author_id: int
+    class ConfigDict:
+        from_attributes = True
+
+class CommentBase(BaseModel):
+    content: str
+
+class CommentCreate(CommentBase):
+    pass
+
+class Comment(CommentBase):
+    id: int
+    entity_type: str
+    entity_id: int
+    author_id: int
+    class ConfigDict:
+        from_attributes = True

@@ -14,7 +14,7 @@ class MongoUserRepository(UserRepository):
         """
         Bypasses integers natively mapping exact string UUID queries safely across MongoDB schemas.
         """
-        return await UserDocument.get(user_id)
+        return await UserDocument.get(str(user_id))
 
     async def get_user_by_email(self, email: str) -> Optional[Any]:
         """

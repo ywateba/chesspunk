@@ -27,7 +27,7 @@ setup_logging()
 from core.db import models
 from core.db.database import engine
 from core.db.documents import UserDocument, CompetitionDocument, MatchDocument
-from routers import auth, competitions, matches, users
+from routers import auth, competitions, matches, users, communities
 from core.config import settings
 
 @asynccontextmanager
@@ -79,3 +79,4 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(competitions.router)
 app.include_router(matches.router)
+app.include_router(communities.router)

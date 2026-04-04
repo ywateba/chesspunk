@@ -5,10 +5,15 @@ Defines the NoSQL abstractions mirroring SQLAlchemy models natively.
 Uses built-in Pydantic constraints inheriting globally.
 """
 
-from beanie import Document
-from pydantic import Field
-from typing import List, Optional
+from pydantic import BaseModel, Field
 from datetime import datetime
+from beanie import Document, Link
+from typing import Optional, List
+
+class CommunityMember(BaseModel):
+    user_id: str
+    role: str = "member"
+    rank: int = 0
 
 class UserDocument(Document):
     email: str
@@ -34,11 +39,41 @@ class MatchDocument(Document):
 
 class CompetitionDocument(Document):
     name: str
-    status: str = "planned"
     format: str = "round_robin"
-    player_ids: List[str] = []
+    status: str = "open"
+    community_id: Optional[str] = None
+    players: List[Link[UserDocument]] = []
+    matches: List[Link[MatchDocument]] = []
     
     class Settings:
         name = "competitions"
+
+class CommunityDocument(Document):
+    name: str
+    description: Optional[str] = None
+    owner_id: str
+    members: List[CommunityMember] = []
+    
+    class Settings:
+        name = "communities"
+
+class PostDocument(Document):
+    community_id: str
+    author_id: str
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = "posts"
+
+class CommentDocument(Document):
+    entity_type: str # "post" or "match"
+    entity_id: str
+    author_id: str
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Settings:
+        name = "comments"
         
     model_config = {"extra": "allow"}

@@ -14,7 +14,7 @@ class MongoMatchRepository(MatchRepository):
         """
         Resolves individual MongoDB objects exactly capturing dynamic states uniquely.
         """
-        return await MatchDocument.get(match_id)
+        return await MatchDocument.get(str(match_id))
 
     async def create_matches(self, matches: List[Any]) -> List[Any]:
         """
