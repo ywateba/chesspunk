@@ -21,3 +21,6 @@ mongomock-motor
 slowapi
 prometheus-fastapi-instrumentator
 structlog
+aioboto3
+boto3
+moto[all]

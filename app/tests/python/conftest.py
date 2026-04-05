@@ -73,8 +73,12 @@ elif DB_ENGINE == "NOSQL":
         """
         yield None
 
+elif DB_ENGINE == "DYNAMODB":
+    @pytest_asyncio.fixture(scope="function")
+    async def db_session():
+        yield None
 else:
-    raise ValueError(f"Unsupported DB_ENGINE: {DB_ENGINE}. Must be 'SQL' or 'NOSQL'")
+    raise ValueError(f"Unsupported DB_ENGINE: {DB_ENGINE}. Must be 'SQL' or 'NOSQL' or 'DYNAMODB'")
 
 @pytest_asyncio.fixture(scope="function")
 async def test_client(db_session):

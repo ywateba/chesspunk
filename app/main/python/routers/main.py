@@ -42,6 +42,9 @@ async def lifespan(app: FastAPI):
     if os.getenv("DB_ENGINE", "SQL") == "NOSQL":
         client = AsyncIOMotorClient(settings.NOSQL_DATABASE_URL)
         await init_beanie(database=client.chesspunk, document_models=[UserDocument, CompetitionDocument, MatchDocument])
+    elif os.getenv("DB_ENGINE", "SQL") == "DYNAMODB":
+        from core.db.dynamodb import init_dynamodb
+        await init_dynamodb()
     yield
 
 # Instantiate Application

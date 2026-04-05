@@ -21,6 +21,11 @@ from core.repositories.nosql.competition_repo import MongoCompetitionRepository
 from core.repositories.nosql.match_repo import MongoMatchRepository
 from core.repositories.nosql.community_repo import MongoCommunityRepository
 from core.repositories.nosql.social_repo import MongoSocialRepository
+from core.repositories.dynamodb.user_repo import DynamoUserRepository
+from core.repositories.dynamodb.competition_repo import DynamoCompetitionRepository
+from core.repositories.dynamodb.match_repo import DynamoMatchRepository
+from core.repositories.dynamodb.community_repo import DynamoCommunityRepository
+from core.repositories.dynamodb.social_repo import DynamoSocialRepository
 from core.repositories.base import UserRepository, CompetitionRepository, MatchRepository, CommunityRepository, SocialRepository
 
 def get_user_repository(db: AsyncSession = Depends(get_db)) -> UserRepository:
@@ -29,7 +34,9 @@ def get_user_repository(db: AsyncSession = Depends(get_db)) -> UserRepository:
     Yields native MongoDB collections if configured, otherwise falls back to PostgreSQL securely.
     """
     engine_type = os.getenv("DB_ENGINE", "SQL")
-    if engine_type == "NOSQL":
+    if engine_type == "DYNAMODB":
+        return DynamoUserRepository()
+    elif engine_type == "NOSQL":
         return MongoUserRepository() # Beanie documents act universally across the application framework inherently
     return SQLUserRepository(db)
 
@@ -39,7 +46,9 @@ def get_competition_repository(db: AsyncSession = Depends(get_db)) -> Competitio
     Yields identical native abstract protocols regardless of deployment architectures.
     """
     engine_type = os.getenv("DB_ENGINE", "SQL")
-    if engine_type == "NOSQL":
+    if engine_type == "DYNAMODB":
+        return DynamoCompetitionRepository()
+    elif engine_type == "NOSQL":
         return MongoCompetitionRepository()
     return SQLCompetitionRepository(db)
 
@@ -48,7 +57,9 @@ def get_match_repository(db: AsyncSession = Depends(get_db)) -> MatchRepository:
     Dependency provider evaluating active Match tracking engines explicitly routing topologies.
     """
     engine_type = os.getenv("DB_ENGINE", "SQL")
-    if engine_type == "NOSQL":
+    if engine_type == "DYNAMODB":
+        return DynamoMatchRepository()
+    elif engine_type == "NOSQL":
         return MongoMatchRepository()
     return SQLMatchRepository(db)
 
@@ -57,7 +68,9 @@ def get_community_repository(db: AsyncSession = Depends(get_db)) -> CommunityRep
     Dependency provider evaluating active Community tracking engines explicitly routing topologies.
     """
     engine_type = os.getenv("DB_ENGINE", "SQL")
-    if engine_type == "NOSQL":
+    if engine_type == "DYNAMODB":
+        return DynamoCommunityRepository()
+    elif engine_type == "NOSQL":
         return MongoCommunityRepository()
     return SQLCommunityRepository(db)
 
@@ -66,6 +79,8 @@ def get_social_repository(db: AsyncSession = Depends(get_db)) -> SocialRepositor
     Supplies explicit relational and identical payload routers scaling polymorphic discourse.
     """
     engine_type = os.getenv("DB_ENGINE", "SQL")
-    if engine_type == "NOSQL":
+    if engine_type == "DYNAMODB":
+        return DynamoSocialRepository()
+    elif engine_type == "NOSQL":
         return MongoSocialRepository()
     return SQLSocialRepository(db)
