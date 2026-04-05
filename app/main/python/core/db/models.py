@@ -1,13 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Table, Enum
+import uuid
+
+from sqlalchemy import Column, String, ForeignKey, Table, Enum, Integer, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from core.db.database import Base
 import enum
+from datetime import datetime
 
 # Association table for Many-to-Many relationship (Players <-> Competitions)
 competition_players = Table(
     'competition_players', Base.metadata,
-    Column('user_id', Integer, ForeignKey('users.id')),
-    Column('competition_id', Integer, ForeignKey('competitions.id'))
+    Column('user_id', String, ForeignKey('users.id')),
+    Column('competition_id', String, ForeignKey('competitions.id'))
 )
 
 class MatchResult(str, enum.Enum):
@@ -19,7 +22,7 @@ class MatchResult(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
@@ -32,11 +35,13 @@ class User(Base):
 class Competition(Base):
     __tablename__ = "competitions"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
     name = Column(String, index=True)
     format = Column(String, default="round_robin")
     status = Column(String, default="open") # open, active, finished
-    community_id = Column(Integer, ForeignKey("communities.id"), nullable=True)
+    community_id = Column(String, ForeignKey("communities.id"), nullable=True)
+    description = Column(String, nullable=True)
+   
     
     # Relationships
     players = relationship("User", secondary=competition_players, back_populates="competitions")
@@ -46,12 +51,12 @@ class Competition(Base):
 class Match(Base):
     __tablename__ = "matches"
 
-    id = Column(Integer, primary_key=True, index=True)
-    competition_id = Column(Integer, ForeignKey("competitions.id"))
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
+    competition_id = Column(String, ForeignKey("competitions.id"))
     
     # Foreign keys for players
-    white_player_id = Column(Integer, ForeignKey("users.id"))
-    black_player_id = Column(Integer, ForeignKey("users.id"))
+    white_player_id = Column(String, ForeignKey("users.id"))
+    black_player_id = Column(String, ForeignKey("users.id"))
     
     result = Column(String, default=MatchResult.PENDING)
     pgn_blueprint = Column(String, nullable=True) # The chess blueprint
@@ -64,10 +69,12 @@ class Match(Base):
 class Community(Base):
     __tablename__ = "communities"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
     name = Column(String, unique=True, index=True)
     description = Column(String, nullable=True)
-    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner_id = Column(String, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_private = Column(Boolean, default=False)
     
     owner = relationship("User", foreign_keys=[owner_id])
     members = relationship("CommunityMember", back_populates="community")
@@ -76,9 +83,9 @@ class Community(Base):
 class CommunityMember(Base):
     __tablename__ = "community_members"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    community_id = Column(Integer, ForeignKey("communities.id"))
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
+    user_id = Column(String, ForeignKey("users.id"))
+    community_id = Column(String, ForeignKey("communities.id"))
     role = Column(String, default="member") # "owner", "admin", "member"
     rank = Column(Integer, default=0)
     
@@ -87,19 +94,21 @@ class CommunityMember(Base):
 
 class Post(Base):
     __tablename__ = "posts"
-    id = Column(Integer, primary_key=True, index=True)
-    community_id = Column(Integer, ForeignKey("communities.id"))
-    author_id = Column(Integer, ForeignKey("users.id"))
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
+    community_id = Column(String, ForeignKey("communities.id"))
+    author_id = Column(String, ForeignKey("users.id"))
     content = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     author = relationship("User")
 
 class Comment(Base):
     __tablename__ = "comments"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: uuid.uuid4().hex)
     entity_type = Column(String) # "post" or "match"
-    entity_id = Column(Integer)
-    author_id = Column(Integer, ForeignKey("users.id"))
+    entity_id = Column(String)
+    author_id = Column(String, ForeignKey("users.id"))
     content = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     author = relationship("User")

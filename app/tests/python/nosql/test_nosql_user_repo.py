@@ -75,8 +75,8 @@ class TestMongoUserRepository:
         # Create user
         created_user = await user_repo.create_user(sample_user_data, hashed_password)
 
-        # Retrieve user by ID (convert to int for repository interface)
-        retrieved_user = await user_repo.get_user(int(str(created_user.id)))
+        # Retrieve user by ID
+        retrieved_user = await user_repo.get_user(created_user.id)
 
         # Assertions
         assert retrieved_user is not None
@@ -86,7 +86,7 @@ class TestMongoUserRepository:
 
     async def test_get_user_not_found(self, user_repo):
         """Test retrieving non-existent user returns None."""
-        retrieved_user = await user_repo.get_user(99999)
+        retrieved_user = await user_repo.get_user(mongomock.ObjectId())
         assert retrieved_user is None
 
     async def test_get_user_by_email(self, user_repo, sample_user_data):
@@ -171,7 +171,7 @@ class TestMongoUserRepository:
         assert created_user.elo == 1200  # Default Elo
 
         # Update Elo
-        updated_user = await user_repo.update_user_elo(int(str(created_user.id)), new_elo)
+        updated_user = await user_repo.update_user_elo(created_user.id, new_elo)
 
         # Assertions
         assert updated_user is not None
@@ -180,7 +180,7 @@ class TestMongoUserRepository:
 
     async def test_update_user_elo_not_found(self, user_repo):
         """Test updating Elo for non-existent user returns None."""
-        updated_user = await user_repo.update_user_elo(99999, 1500)
+        updated_user = await user_repo.update_user_elo(mongomock.ObjectId(), 1500)
         assert updated_user is None
 
     async def test_duplicate_email_creation(self, user_repo):
@@ -228,7 +228,7 @@ class TestMongoUserRepository:
         created_user = await user_repo.create_user(user_data, hashed_password)
 
         # Retrieve and verify
-        retrieved_user = await user_repo.get_user(int(str(created_user.id)))
+        retrieved_user = await user_repo.get_user(created_user.id)
 
         assert retrieved_user.username == user_data.username
         assert retrieved_user.email == user_data.email

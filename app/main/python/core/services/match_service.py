@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from core.schemas import schemas
 from core.repositories.base import MatchRepository
 
-async def update_match_result(match_repo: MatchRepository, match_id: int, match_data: schemas.MatchUpdate):
+async def update_match_result(match_repo: MatchRepository, match_id: str, match_data: schemas.MatchUpdate):
     """
     Submits game resolutions including valid FIDE chess notations explicitly updating
     the overarching leaderboard constraints seamlessly tracking 404 targets.

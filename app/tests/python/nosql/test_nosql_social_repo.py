@@ -19,7 +19,7 @@ def _patched_list_collection_names(self, *args, **kwargs):
 mongomock.Database.list_collection_names = _patched_list_collection_names
 
 from core.schemas import schemas
-from core.db.documents import UserDocument, CommunityDocument, PostDocument, CommentDocument
+from core.db.documents import UserDocument, CommunityDocument, PostDocument, CommentDocument, CompetitionDocument, MatchDocument
 from core.repositories.nosql.user_repo import MongoUserRepository
 from core.repositories.nosql.community_repo import MongoCommunityRepository
 from core.repositories.nosql.social_repo import MongoSocialRepository
@@ -31,7 +31,7 @@ async def init_mock_mongodb():
     client = AsyncMongoMockClient()
     await init_beanie(
         database=client.get_database("test_db"),
-        document_models=[UserDocument, CommunityDocument, PostDocument, CommentDocument]
+        document_models=[UserDocument, CommunityDocument, PostDocument, CommentDocument, CompetitionDocument, MatchDocument]
     )
     yield
 
@@ -64,7 +64,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create post
@@ -74,8 +74,8 @@ class TestMongoSocialRepository:
         # Assertions
         assert post is not None
         assert post.id is not None
-        assert str(post.community_id) == str(community.id)
-        assert str(post.author_id) == str(owner.id)
+        assert post.community_id == str(community.id)
+        assert post.author_id == str(owner.id)
         assert post.content == post_content
         assert post.created_at is not None
 
@@ -88,7 +88,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create multiple posts
@@ -121,7 +121,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create 5 posts
@@ -148,7 +148,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Empty Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         posts = await social_repo.get_posts(community.id)
@@ -164,11 +164,11 @@ class TestMongoSocialRepository:
 
         comm1 = await community_repo.create_community(
             schemas.CommunityCreate(name="Community 1", description="Test"),
-            str(owner.id)
+            owner.id
         )
         comm2 = await community_repo.create_community(
             schemas.CommunityCreate(name="Community 2", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create posts in each community
@@ -197,7 +197,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create post
@@ -211,8 +211,8 @@ class TestMongoSocialRepository:
         assert comment is not None
         assert comment.id is not None
         assert comment.entity_type == "post"
-        assert str(comment.entity_id) == str(post.id)
-        assert str(comment.author_id) == str(commenter.id)
+        assert comment.entity_id == str(post.id)
+        assert comment.author_id == str(commenter.id)
         assert comment.content == comment_content
         assert comment.created_at is not None
 
@@ -264,8 +264,8 @@ class TestMongoSocialRepository:
         # Assertions
         assert comment is not None
         assert comment.entity_type == "match"
-        assert str(comment.entity_id) == str(match.id)
-        assert str(comment.author_id) == str(commenter.id)
+        assert comment.entity_id == str(match.id)
+        assert comment.author_id == str(commenter.id)
         assert comment.content == comment_content
 
     async def test_get_comments_on_post(self, social_repo, user_repo, community_repo):
@@ -285,7 +285,7 @@ class TestMongoSocialRepository:
 
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create post
@@ -325,7 +325,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Create post
@@ -355,7 +355,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         post = await social_repo.create_post(community.id, owner.id, "Test post")
@@ -384,7 +384,7 @@ class TestMongoSocialRepository:
         # Create community and post
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
         post = await social_repo.create_post(community.id, owner.id, "Test post")
 
@@ -437,7 +437,7 @@ class TestMongoSocialRepository:
         )
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Test Community", description="Test"),
-            str(owner.id)
+            owner.id
         )
 
         # Test post with complex content
@@ -470,8 +470,8 @@ What are your thoughts on this opening?"""
         assert len(retrieved_comments) == 1
         assert retrieved_posts[0].content == complex_post_content
         assert retrieved_comments[0].content == complex_comment_content
-        assert str(retrieved_posts[0].author_id) == str(owner.id)
-        assert str(retrieved_comments[0].author_id) == str(commenter.id)
+        assert retrieved_posts[0].author_id == str(owner.id)
+        assert retrieved_comments[0].author_id == str(commenter.id)
 
     async def test_multiple_authors_social_interaction(self, social_repo, user_repo, community_repo):
         """Test social interactions with multiple authors."""
@@ -486,7 +486,7 @@ What are your thoughts on this opening?"""
 
         community = await community_repo.create_community(
             schemas.CommunityCreate(name="Social Community", description="Test"),
-            str(users[0].id)
+            users[0].id
         )
 
         # User 0 creates a post

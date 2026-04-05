@@ -5,6 +5,7 @@ Simulates simple bulk-insertions tracking match operations cleanly mapping Docum
 """
 
 from typing import List, Optional, Any
+from pydantic import ValidationError
 from core.repositories.base import MatchRepository
 from core.schemas import schemas
 from core.db.documents import MatchDocument
@@ -14,7 +15,10 @@ class MongoMatchRepository(MatchRepository):
         """
         Resolves individual MongoDB objects exactly capturing dynamic states uniquely.
         """
-        return await MatchDocument.get(str(match_id))
+        try:
+            return await MatchDocument.get(str(match_id))
+        except ValidationError:
+            return None
 
     async def create_matches(self, matches: List[Any]) -> List[Any]:
         """
@@ -40,5 +44,6 @@ class MongoMatchRepository(MatchRepository):
         db_match.result = result
         if pgn_blueprint:
             db_match.pgn_blueprint = pgn_blueprint
-        await db_match.save()
+        if hasattr(db_match, "save"):
+            await db_match.save()
         return db_match

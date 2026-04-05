@@ -18,11 +18,15 @@ class MongoCompetitionRepository(CompetitionRepository):
         This entirely replaces `selectinload` executing standard parallel $in array queries exclusively seamlessly.
         """
         comp = await CompetitionDocument.get(str(competition_id))
-        if not comp: return None
-        
-        # Emulate the explicit SelectInLoad relation fetches mapped over dynamic properties dynamically safely.
-        object_ids = [ObjectId(pid) for pid in comp.players]
-        comp.players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
+        if not comp:
+            return None
+
+        if comp.players:
+            object_ids = [ObjectId(pid) for pid in comp.players]
+            comp.players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
+        else:
+            comp.players = []
+
         comp.matches = await MatchDocument.find({"competition_id": str(comp.id)}).to_list()
         return comp
 
@@ -45,7 +49,15 @@ class MongoCompetitionRepository(CompetitionRepository):
         Injects ID values inherently maintaining Array relationships securely over lists seamlessly bypassing complex Junction abstractions explicitly.
         """
         user_id_str = str(user.id)
-        if user_id_str not in db_comp.players:
+        normalized_player_ids = {
+            str(player.id) if hasattr(player, "id") else str(player)
+            for player in db_comp.players
+        }
+        if user_id_str not in normalized_player_ids:
+            db_comp.players = [
+                str(player.id) if hasattr(player, "id") else str(player)
+                for player in db_comp.players
+            ]
             db_comp.players.append(user_id_str)
             await db_comp.save()
         return await self.get_competition(str(db_comp.id))

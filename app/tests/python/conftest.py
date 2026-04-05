@@ -14,7 +14,7 @@ print(f"Using database engine: {DB_ENGINE}")
 
 if DB_ENGINE == "SQL":
     # Use an in-memory SQLite database for testing via aiosqlite
-    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///test.db")
+    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
     print(f"Using SQL test database at: {SQLALCHEMY_DATABASE_URL}")
 
     engine = create_async_engine(
@@ -49,6 +49,8 @@ elif DB_ENGINE == "NOSQL":
         kwargs.pop('authorizedCollections', None)
         kwargs.pop('nameOnly', None)
         return _original_list_collection_names(self, *args, **kwargs)
+
+
     mongomock.Database.list_collection_names = _patched_list_collection_names
 
     from core.db.documents import UserDocument, CompetitionDocument, MatchDocument, CommunityDocument

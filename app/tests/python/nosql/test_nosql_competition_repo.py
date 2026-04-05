@@ -54,10 +54,7 @@ class TestMongoCompetitionRepository:
         """Fixture providing sample competition creation data."""
         return schemas.CompetitionCreate(
             name="Test Tournament",
-            description="A test chess tournament",
-            max_players=16,
-            time_control="blitz",
-            start_date="2024-12-01T10:00:00Z"
+            description="A test chess tournament"
         )
 
     async def test_create_competition(self, comp_repo, sample_competition_data):
@@ -70,9 +67,7 @@ class TestMongoCompetitionRepository:
         assert competition.id is not None
         assert competition.name == sample_competition_data.name
         assert competition.description == sample_competition_data.description
-        assert competition.max_players == sample_competition_data.max_players
-        assert competition.time_control == sample_competition_data.time_control
-        assert competition.status == "pending"  # Default status
+        assert competition.status == "open"  # Default status
         assert competition.players == []  # Empty player list initially
         assert competition.created_at is not None
 
@@ -82,7 +77,7 @@ class TestMongoCompetitionRepository:
         created_comp = await comp_repo.create_competition(sample_competition_data)
 
         # Retrieve competition by ID
-        retrieved_comp = await comp_repo.get_competition(int(str(created_comp.id)))
+        retrieved_comp = await comp_repo.get_competition(created_comp.id)
 
         # Assertions
         assert retrieved_comp is not None
@@ -92,7 +87,7 @@ class TestMongoCompetitionRepository:
 
     async def test_get_competition_not_found(self, comp_repo):
         """Test retrieving non-existent competition returns None."""
-        retrieved_comp = await comp_repo.get_competition(99999)
+        retrieved_comp = await comp_repo.get_competition(mongomock.ObjectId())
         assert retrieved_comp is None
 
     async def test_get_competitions_pagination(self, comp_repo):
@@ -140,19 +135,19 @@ class TestMongoCompetitionRepository:
 
         # Add first player
         updated_comp = await comp_repo.add_player_to_competition(comp, user1)
-        assert str(user1.id) in updated_comp.players
+        assert any(player.id == user1.id for player in updated_comp.players)
         assert len(updated_comp.players) == 1
 
         # Add second player
         updated_comp = await comp_repo.add_player_to_competition(updated_comp, user2)
-        assert str(user2.id) in updated_comp.players
+        assert any(player.id == user2.id for player in updated_comp.players)
         assert len(updated_comp.players) == 2
 
         # Verify through get_competition
-        retrieved_comp = await comp_repo.get_competition(int(str(comp.id)))
+        retrieved_comp = await comp_repo.get_competition(comp.id)
         assert len(retrieved_comp.players) == 2
-        assert str(user1.id) in retrieved_comp.players
-        assert str(user2.id) in retrieved_comp.players
+        assert any(player.id == user1.id for player in retrieved_comp.players)
+        assert any(player.id == user2.id for player in retrieved_comp.players)
 
     async def test_add_duplicate_player_to_competition(self, comp_repo, user_repo, sample_competition_data):
         """Test adding the same player multiple times doesn't create duplicates."""
@@ -175,7 +170,7 @@ class TestMongoCompetitionRepository:
         """Test updating competition status."""
         # Create competition
         comp = await comp_repo.create_competition(sample_competition_data)
-        assert comp.status == "pending"
+        assert comp.status == "open"
 
         # Update status to active
         updated_comp = await comp_repo.update_competition_status(comp, "active")
@@ -186,7 +181,7 @@ class TestMongoCompetitionRepository:
         assert updated_comp.status == "finished"
 
         # Verify through get_competition
-        retrieved_comp = await comp_repo.get_competition(int(str(comp.id)))
+        retrieved_comp = await comp_repo.get_competition(comp.id)
         assert retrieved_comp.status == "finished"
 
     async def test_competition_with_players_and_matches(self, comp_repo, user_repo, sample_competition_data):
@@ -221,7 +216,7 @@ class TestMongoCompetitionRepository:
         matches = await match_repo.create_matches([payload])
 
         # Retrieve competition with all related data
-        retrieved_comp = await comp_repo.get_competition(int(str(comp.id)))
+        retrieved_comp = await comp_repo.get_competition(comp.id)
 
         # Assertions
         assert retrieved_comp is not None
@@ -233,24 +228,18 @@ class TestMongoCompetitionRepository:
         """Test that competition data is stored and retrieved correctly."""
         comp_data = schemas.CompetitionCreate(
             name="Complex Tournament Name",
-            description="A very detailed description with special characters: !@#$%^&*()",
-            max_players=64,
-            time_control="classical",
-            start_date="2024-12-25T15:30:00Z",
-            end_date="2024-12-26T18:00:00Z"
+            description="A very detailed description with special characters: !@#$%^&*()"
         )
 
         # Create competition
         created_comp = await comp_repo.create_competition(comp_data)
 
         # Retrieve and verify
-        retrieved_comp = await comp_repo.get_competition(int(str(created_comp.id)))
+        retrieved_comp = await comp_repo.get_competition(created_comp.id)
 
         assert retrieved_comp.name == comp_data.name
         assert retrieved_comp.description == comp_data.description
-        assert retrieved_comp.max_players == comp_data.max_players
-        assert retrieved_comp.time_control == comp_data.time_control
-        assert retrieved_comp.status == "pending"
+        assert retrieved_comp.status == "open"
 
     async def test_multiple_competitions_isolation(self, comp_repo, user_repo):
         """Test that multiple competitions maintain data isolation."""
@@ -276,10 +265,10 @@ class TestMongoCompetitionRepository:
         comp2 = await comp_repo.add_player_to_competition(comp2, user2)
 
         # Verify isolation
-        retrieved_comp1 = await comp_repo.get_competition(int(str(comp1.id)))
-        retrieved_comp2 = await comp_repo.get_competition(int(str(comp2.id)))
+        retrieved_comp1 = await comp_repo.get_competition(comp1.id)
+        retrieved_comp2 = await comp_repo.get_competition(comp2.id)
 
-        assert str(user1.id) in retrieved_comp1.players
-        assert str(user2.id) not in retrieved_comp1.players
-        assert str(user2.id) in retrieved_comp2.players
-        assert str(user1.id) not in retrieved_comp2.players
+        assert any(player.id == user1.id for player in retrieved_comp1.players)
+        assert all(player.id != user2.id for player in retrieved_comp1.players)
+        assert any(player.id == user2.id for player in retrieved_comp2.players)
+        assert all(player.id != user1.id for player in retrieved_comp2.players)

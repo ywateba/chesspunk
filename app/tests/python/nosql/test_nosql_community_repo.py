@@ -29,7 +29,7 @@ async def init_mock_mongodb():
     """Initialize mock MongoDB for all tests."""
     client = AsyncMongoMockClient()
     await init_beanie(
-        database=client.get_database("test_db"),
+        database=client.get_database("mongo_test_db"),
         document_models=[UserDocument, CommunityDocument]
     )
     yield
@@ -67,7 +67,7 @@ class TestMongoCommunityRepository:
         )
 
         # Create community
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Assertions
         assert community is not None
@@ -88,10 +88,10 @@ class TestMongoCommunityRepository:
             schemas.UserCreate(username="owner", email="owner@test.com", password="pass"),
             "hash"
         )
-        created_community = await community_repo.create_community(sample_community_data, str(owner.id))
+        created_community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Retrieve community
-        retrieved_community = await community_repo.get_community(str(created_community.id))
+        retrieved_community = await community_repo.get_community(created_community.id)
 
         # Assertions
         assert retrieved_community is not None
@@ -120,7 +120,7 @@ class TestMongoCommunityRepository:
 
         created_communities = []
         for comm_data in communities_data:
-            comm = await community_repo.create_community(comm_data, str(owner.id))
+            comm = await community_repo.create_community(comm_data, owner.id)
             created_communities.append(comm)
 
         # Test pagination
@@ -152,10 +152,10 @@ class TestMongoCommunityRepository:
             "hash"
         )
 
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Join community as member
-        updated_community = await community_repo.join_community(str(community.id), str(member.id))
+        updated_community = await community_repo.join_community(community.id, member.id)
 
         # Assertions
         assert updated_community is not None
@@ -175,10 +175,10 @@ class TestMongoCommunityRepository:
             "hash"
         )
 
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Join as moderator
-        updated_community = await community_repo.join_community(str(community.id), str(moderator.id), "moderator")
+        updated_community = await community_repo.join_community(community.id, moderator.id, "moderator")
 
         # Assertions
         assert len(updated_community.members) == 2
@@ -196,14 +196,14 @@ class TestMongoCommunityRepository:
             "hash"
         )
 
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Join first time
-        updated_community = await community_repo.join_community(str(community.id), str(member.id))
+        updated_community = await community_repo.join_community(community.id, member.id)
         assert len(updated_community.members) == 2
 
         # Join second time
-        updated_community = await community_repo.join_community(str(community.id), str(member.id))
+        updated_community = await community_repo.join_community(community.id, member.id)
         assert len(updated_community.members) == 2  # Should still be 2
 
     async def test_join_nonexistent_community(self, community_repo, user_repo):
@@ -214,7 +214,7 @@ class TestMongoCommunityRepository:
         )
 
         # Try to join non-existent community
-        result = await community_repo.join_community("nonexistent_id", str(member.id))
+        result = await community_repo.join_community("nonexistent_id", member.id)
         assert result is None
 
     async def test_get_members(self, community_repo, user_repo, sample_community_data):
@@ -233,14 +233,14 @@ class TestMongoCommunityRepository:
             )
             members.append(member)
 
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Add members
         for member in members:
-            await community_repo.join_community(str(community.id), str(member.id))
+            await community_repo.join_community(community.id, member.id)
 
         # Get members
-        retrieved_members = await community_repo.get_members(str(community.id))
+        retrieved_members = await community_repo.get_members(community.id)
 
         # Assertions
         assert len(retrieved_members) == 4  # owner + 3 members
@@ -256,10 +256,10 @@ class TestMongoCommunityRepository:
             "hash"
         )
 
-        community = await community_repo.create_community(sample_community_data, str(owner.id))
+        community = await community_repo.create_community(sample_community_data, owner.id)
 
         # Get members (should only have owner)
-        members = await community_repo.get_members(str(community.id))
+        members = await community_repo.get_members(community.id)
 
         assert len(members) == 1
         assert members[0].user_id == str(owner.id)
@@ -284,10 +284,10 @@ class TestMongoCommunityRepository:
         )
 
         # Create community
-        created_community = await community_repo.create_community(complex_community_data, str(owner.id))
+        created_community = await community_repo.create_community(complex_community_data, owner.id)
 
         # Retrieve and verify
-        retrieved_community = await community_repo.get_community(str(created_community.id))
+        retrieved_community = await community_repo.get_community(created_community.id)
 
         assert retrieved_community.name == complex_community_data.name
         assert retrieved_community.description == complex_community_data.description
@@ -309,8 +309,8 @@ class TestMongoCommunityRepository:
         comm1_data = schemas.CommunityCreate(name="Community 1", description="First community")
         comm2_data = schemas.CommunityCreate(name="Community 2", description="Second community")
 
-        comm1 = await community_repo.create_community(comm1_data, str(owner1.id))
-        comm2 = await community_repo.create_community(comm2_data, str(owner2.id))
+        comm1 = await community_repo.create_community(comm1_data, owner1.id)
+        comm2 = await community_repo.create_community(comm2_data, owner2.id)
 
         # Create a member user
         member = await user_repo.create_user(
@@ -319,11 +319,11 @@ class TestMongoCommunityRepository:
         )
 
         # Add member to first community only
-        await community_repo.join_community(str(comm1.id), str(member.id))
+        await community_repo.join_community(comm1.id, member.id)
 
         # Verify isolation
-        comm1_members = await community_repo.get_members(str(comm1.id))
-        comm2_members = await community_repo.get_members(str(comm2.id))
+        comm1_members = await community_repo.get_members(comm1.id)
+        comm2_members = await community_repo.get_members(comm2.id)
 
         assert len(comm1_members) == 2  # owner1 + member
         assert len(comm2_members) == 1  # owner2 only
@@ -344,7 +344,7 @@ class TestMongoCommunityRepository:
             description="Private community",
             is_private=True
         )
-        private_comm = await community_repo.create_community(private_data, str(owner.id))
+        private_comm = await community_repo.create_community(private_data, owner.id)
 
         # Create public community
         public_data = schemas.CommunityCreate(
@@ -352,15 +352,15 @@ class TestMongoCommunityRepository:
             description="Public community",
             is_private=False
         )
-        public_comm = await community_repo.create_community(public_data, str(owner.id))
+        public_comm = await community_repo.create_community(public_data, owner.id)
 
         # Verify privacy settings
         assert private_comm.is_private == True
         assert public_comm.is_private == False
 
         # Both should be retrievable (privacy is handled at service layer)
-        retrieved_private = await community_repo.get_community(str(private_comm.id))
-        retrieved_public = await community_repo.get_community(str(public_comm.id))
+        retrieved_private = await community_repo.get_community(private_comm.id)
+        retrieved_public = await community_repo.get_community(public_comm.id)
 
         assert retrieved_private.is_private == True
         assert retrieved_public.is_private == False

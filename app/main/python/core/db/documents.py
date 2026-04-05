@@ -8,7 +8,7 @@ Uses built-in Pydantic constraints inheriting globally.
 from pydantic import BaseModel, Field
 from datetime import datetime
 from beanie import Document, Link
-from typing import Optional, List
+from typing import Optional, List, Any
 
 class CommunityMember(BaseModel):
     user_id: str
@@ -33,6 +33,7 @@ class MatchDocument(Document):
     black_player_id: str
     result: str = "*"
     pgn_blueprint: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Settings:
         name = "matches"
@@ -42,8 +43,10 @@ class CompetitionDocument(Document):
     format: str = "round_robin"
     status: str = "open"
     community_id: Optional[str] = None
-    players: List[Link[UserDocument]] = []
-    matches: List[Link[MatchDocument]] = []
+    players: List[str] = []
+    matches: List[Any] = []
+    description: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Settings:
         name = "competitions"
@@ -53,6 +56,8 @@ class CommunityDocument(Document):
     description: Optional[str] = None
     owner_id: str
     members: List[CommunityMember] = []
+    is_private: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Settings:
         name = "communities"

@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 # --- User Schemas ---
@@ -23,7 +25,7 @@ class UserCreate(UserBase):
     }
 
 class User(UserBase):
-    id: int
+    id: str
     class ConfigDict:
         from_attributes = True
 
@@ -33,8 +35,8 @@ class Token(BaseModel):
 
 # --- Match Schemas ---
 class MatchBase(BaseModel):
-    white_player_id: int
-    black_player_id: int
+    white_player_id: str
+    black_player_id: str
     result: str = "*"
 
 class MatchUpdate(BaseModel):
@@ -50,8 +52,8 @@ class MatchUpdate(BaseModel):
     }
 
 class Match(MatchBase):
-    id: int
-    competition_id: int
+    id: str
+    competition_id: str
     pgn_blueprint: Optional[str] = None
     class ConfigDict:
         from_attributes = True
@@ -60,7 +62,8 @@ class Match(MatchBase):
 class CompetitionBase(BaseModel):
     name: str
     format: str = "round_robin"
-    community_id: Optional[int] = None
+    community_id: Optional[str] = None
+    description: Optional[str] = None
 
 class CompetitionCreate(CompetitionBase):
     model_config = {
@@ -72,7 +75,7 @@ class CompetitionCreate(CompetitionBase):
     }
 
 class Competition(CompetitionBase):
-    id: int
+    id: str
     status: str
     players: List[User] = []
     matches: List[Match] = []
@@ -95,18 +98,19 @@ class CommunityBase(BaseModel):
     description: Optional[str] = None
 
 class CommunityCreate(CommunityBase):
-    pass
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    is_private: bool = False
 
 class CommunityMemberSchema(BaseModel):
-    user_id: int
+    user_id: str
     role: str
     rank: int
     class ConfigDict:
         from_attributes = True
 
 class Community(CommunityBase):
-    id: int
-    owner_id: int
+    id: str
+    owner_id: str
     members: List[CommunityMemberSchema] = []
     class ConfigDict:
         from_attributes = True
@@ -119,9 +123,9 @@ class PostCreate(PostBase):
     pass
 
 class Post(PostBase):
-    id: int
-    community_id: int
-    author_id: int
+    id: str
+    community_id: str
+    author_id: str
     class ConfigDict:
         from_attributes = True
 
@@ -132,9 +136,9 @@ class CommentCreate(CommentBase):
     pass
 
 class Comment(CommentBase):
-    id: int
+    id: str
     entity_type: str
-    entity_id: int
-    author_id: int
+    entity_id: str
+    author_id: str
     class ConfigDict:
         from_attributes = True

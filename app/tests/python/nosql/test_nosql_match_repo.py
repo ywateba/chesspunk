@@ -81,14 +81,14 @@ class TestMongoMatchRepository:
         created_match = created_matches[0]
 
         # Retrieve match by ID
-        retrieved_match = await match_repo.get_match(int(str(created_match.id)))
+        retrieved_match = await match_repo.get_match(created_match.id)
 
         # Assertions
         assert retrieved_match is not None
         assert retrieved_match.id == created_match.id
-        assert str(retrieved_match.competition_id) == str(comp.id)
-        assert str(retrieved_match.white_player_id) == str(user1.id)
-        assert str(retrieved_match.black_player_id) == str(user2.id)
+        assert retrieved_match.competition_id == str(comp.id)
+        assert retrieved_match.white_player_id == str(user1.id)
+        assert retrieved_match.black_player_id == str(user2.id)
         assert retrieved_match.result == "*"
 
     async def test_get_match_not_found(self, match_repo):
@@ -124,9 +124,9 @@ class TestMongoMatchRepository:
         assert len(created_matches) == 1
         match = created_matches[0]
         assert match.id is not None
-        assert str(match.competition_id) == str(comp.id)
-        assert str(match.white_player_id) == str(user1.id)
-        assert str(match.black_player_id) == str(user2.id)
+        assert match.competition_id == str(comp.id)
+        assert match.white_player_id == str(user1.id)
+        assert match.black_player_id == str(user2.id)
         assert match.result == "*"
         assert match.pgn_blueprint is None
         assert match.created_at is not None
@@ -161,7 +161,7 @@ class TestMongoMatchRepository:
         assert len(created_matches) == 2
         for i, match in enumerate(created_matches):
             assert match.id is not None
-            assert str(match.competition_id) == str(comp.id)
+            assert match.competition_id == str(comp.id)
             assert match.result == "*"
             assert match.pgn_blueprint is None
 
@@ -342,13 +342,13 @@ class TestMongoMatchRepository:
         updated_match = await match_repo.update_match(created_match, "1-0", complex_pgn)
 
         # Retrieve and verify
-        retrieved_match = await match_repo.get_match(int(str(created_match.id)))
+        retrieved_match = await match_repo.get_match(created_match.id)
 
         assert retrieved_match.result == "1-0"
         assert retrieved_match.pgn_blueprint == complex_pgn
-        assert str(retrieved_match.competition_id) == str(comp.id)
-        assert str(retrieved_match.white_player_id) == str(user1.id)
-        assert str(retrieved_match.black_player_id) == str(user2.id)
+        assert retrieved_match.competition_id == str(comp.id)
+        assert retrieved_match.white_player_id == str(user1.id)
+        assert retrieved_match.black_player_id == str(user2.id)
 
     async def test_matches_isolation(self, match_repo, user_repo, comp_repo):
         """Test that matches from different competitions are properly isolated."""
@@ -382,6 +382,6 @@ class TestMongoMatchRepository:
         ])
 
         # Verify matches belong to correct competitions
-        assert str(matches1[0].competition_id) == str(comp1.id)
-        assert str(matches2[0].competition_id) == str(comp2.id)
-        assert str(matches1[0].competition_id) != str(matches2[0].competition_id)
+        assert matches1[0].competition_id == str(comp1.id)
+        assert matches2[0].competition_id == str(comp2.id)
+        assert matches1[0].competition_id != matches2[0].competition_id
