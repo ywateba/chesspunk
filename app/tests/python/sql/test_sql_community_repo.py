@@ -82,7 +82,7 @@ async def test_get_community_with_string_id(db_session: AsyncSession):
     created_comm = await community_repo.create_community(comm_data, owner.id)
 
     # Get the community using string ID
-    fetched_comm = await community_repo.get_community(str(created_comm.id))
+    fetched_comm = await community_repo.get_community(created_comm.id)
 
     assert fetched_comm is not None
     assert fetched_comm.id == created_comm.id

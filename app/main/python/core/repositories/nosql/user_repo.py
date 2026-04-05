@@ -20,13 +20,13 @@ class MongoUserRepository(UserRepository):
         """
         Locate single instances checking embedded email keys explicitly relying on asynchronous ODM wrappers.
         """
-        return await UserDocument.find_one(UserDocument.email == email)
+        return await UserDocument.find_one({"email": email})
 
     async def get_user_by_username(self, username: str) -> Optional[Any]:
         """
         Ensures structural indexing operates correctly across arbitrary username comparisons explicitly.
         """
-        return await UserDocument.find_one(UserDocument.username == username)
+        return await UserDocument.find_one({"username": username})
 
     async def get_users(self, skip: int = 0, limit: int = 100) -> List[Any]:
         """
@@ -41,7 +41,9 @@ class MongoUserRepository(UserRepository):
         db_user = UserDocument(
             email=user.email,
             username=user.username,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            role=user.role,
+            elo=user.elo,
         )
         return await db_user.insert()
 

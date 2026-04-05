@@ -11,8 +11,11 @@ from core.auth.utils import get_current_user, RoleChecker
 from core.db import models
 from core.dependencies import get_match_repository, get_social_repository
 from core.repositories.base import MatchRepository, SocialRepository
-from core.services.match_service import update_match_result as service_update_match_result
-from core.services.chess_service import parse_bulk_pgn, evaluate_pgn_with_stockfish
+from core.services.match_service import (
+    update_match_result as service_update_match_result,
+    evaluate_match as service_evaluate_match
+)
+from core.services.chess_service import parse_bulk_pgn
 from core.rate_limit import limiter
 from typing import List
 from fastapi import Query
@@ -20,7 +23,7 @@ from fastapi import Query
 router = APIRouter(prefix="/matches", tags=["matches"])
 
 @router.put("/{match_id}", response_model=schemas.Match, summary="Update match result")
-async def update_match_result(match_id: int, match_data: schemas.MatchUpdate, match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(RoleChecker(["admin", "organizer"]))):
+async def update_match_result(match_id: str, match_data: schemas.MatchUpdate, match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(RoleChecker(["admin", "organizer"]))):
     """
     Updates the outcome of a match and attaches optional PGN blueprints simulating raw match persistence operations.
     Matches are typically generated securely through the Competition routers directly natively.
@@ -44,21 +47,16 @@ async def upload_pgn(request: Request, file: UploadFile = File(...), current_use
 
 @router.post("/{match_id}/evaluate", summary="Evaluate full match with Stockfish")
 @limiter.limit("5/minute")
-async def evaluate_match(request: Request, match_id: int, match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(get_current_user)):
+async def evaluate_match(request: Request, match_id: str, match_repo: MatchRepository = Depends(get_match_repository), current_user: models.User = Depends(get_current_user)):
     """
     Spawns Stockfish microservice processes locally assigning blunder metrics asynchronously.
     """
-    match = await match_repo.get_match(match_id)
-    if not match or not match.pgn_blueprint:
-        raise HTTPException(status_code=404, detail="Match not found or PGN blueprint is missing.")
-        
-    evaluation = await evaluate_pgn_with_stockfish(match.pgn_blueprint, time_limit_ms=50)
-    return {"match_id": match_id, "evaluation": evaluation}
+    return await service_evaluate_match(match_repo, match_id)
 
 @router.post("/{match_id}/comments", response_model=schemas.Comment, summary="Comment on a match organically")
-async def create_match_comment(match_id: int, comment_data: schemas.CommentCreate, social_repo: SocialRepository = Depends(get_social_repository), current_user: models.User = Depends(get_current_user)):
+async def create_match_comment(match_id: str, comment_data: schemas.CommentCreate, social_repo: SocialRepository = Depends(get_social_repository), current_user: models.User = Depends(get_current_user)):
     return await social_repo.create_comment("match", match_id, current_user.id, comment_data.content)
 
 @router.get("/{match_id}/comments", response_model=List[schemas.Comment], summary="Get comments securely mapped to matches")
-async def get_match_comments(match_id: int, skip: int = Query(0), limit: int = Query(50), social_repo: SocialRepository = Depends(get_social_repository)):
+async def get_match_comments(match_id: str, skip: int = Query(0), limit: int = Query(50), social_repo: SocialRepository = Depends(get_social_repository)):
     return await social_repo.get_comments("match", match_id, skip, limit)

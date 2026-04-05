@@ -16,7 +16,7 @@ class SQLMatchRepository(MatchRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_match(self, match_id: int) -> Optional[models.Match]:
+    async def get_match(self, match_id: str) -> Optional[models.Match]:
         """
         Pull exact Match execution states inherently mapping unique execution queries.
         """
