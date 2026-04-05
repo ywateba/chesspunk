@@ -23,11 +23,13 @@ class MongoCompetitionRepository(CompetitionRepository):
 
         if comp.players:
             object_ids = [PydanticObjectId(pid) for pid in comp.players]
-            comp.players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
+            raw_players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
+            comp.players = [schemas.User.model_validate(player) for player in raw_players]
         else:
             comp.players = []
 
-        comp.matches = await MatchDocument.find({"competition_id": str(comp.id)}).to_list()
+        raw_matches = await MatchDocument.find({"competition_id": str(comp.id)}).to_list()
+        comp.matches = [schemas.Match.model_validate(match) for match in raw_matches]
         return comp
 
     async def get_competitions(self, skip: int = 0, limit: int = 100) -> List[Any]:
@@ -35,6 +37,15 @@ class MongoCompetitionRepository(CompetitionRepository):
         Yields paginated objects structurally mapping base attributes safely matching SQL architectures directly natively.
         """
         comps = await CompetitionDocument.find().skip(skip).limit(limit).to_list()
+        for comp in comps:
+            if comp.players:
+                object_ids = [PydanticObjectId(pid) for pid in comp.players]
+                raw_players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
+                comp.players = [schemas.User.model_validate(player) for player in raw_players]
+            else:
+                comp.players = []
+            raw_matches = await MatchDocument.find({"competition_id": str(comp.id)}).to_list()
+            comp.matches = [schemas.Match.model_validate(match) for match in raw_matches]
         return comps
 
     async def create_competition(self, comp: schemas.CompetitionCreate) -> Any:
@@ -66,6 +77,9 @@ class MongoCompetitionRepository(CompetitionRepository):
         """
         Dynamically applies local modifications verifying updates universally.
         """
-        db_comp.status = status
-        await db_comp.save()
-        return await self.get_competition(str(db_comp.id))
+        comp = await CompetitionDocument.get(str(db_comp.id))
+        if not comp:
+            return None
+        comp.status = status
+        await comp.save()
+        return await self.get_competition(str(comp.id))

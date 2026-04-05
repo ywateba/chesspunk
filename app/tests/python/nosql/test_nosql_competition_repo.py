@@ -135,19 +135,19 @@ class TestMongoCompetitionRepository:
 
         # Add first player
         updated_comp = await comp_repo.add_player_to_competition(comp, user1)
-        assert any(player.id == user1.id for player in updated_comp.players)
+        assert any(str(player.id) == str(user1.id) for player in updated_comp.players)
         assert len(updated_comp.players) == 1
 
         # Add second player
         updated_comp = await comp_repo.add_player_to_competition(updated_comp, user2)
-        assert any(player.id == user2.id for player in updated_comp.players)
+        assert any(str(player.id) == str(user2.id) for player in updated_comp.players)
         assert len(updated_comp.players) == 2
 
         # Verify through get_competition
         retrieved_comp = await comp_repo.get_competition(comp.id)
         assert len(retrieved_comp.players) == 2
-        assert any(player.id == user1.id for player in retrieved_comp.players)
-        assert any(player.id == user2.id for player in retrieved_comp.players)
+        assert any(str(player.id) == str(user1.id) for player in retrieved_comp.players)
+        assert any(str(player.id) == str(user2.id) for player in retrieved_comp.players)
 
     async def test_add_duplicate_player_to_competition(self, comp_repo, user_repo, sample_competition_data):
         """Test adding the same player multiple times doesn't create duplicates."""
@@ -222,7 +222,7 @@ class TestMongoCompetitionRepository:
         assert retrieved_comp is not None
         assert len(retrieved_comp.players) == 2
         assert len(retrieved_comp.matches) == 1
-        assert retrieved_comp.matches[0].id == matches[0].id
+        assert str(retrieved_comp.matches[0].id) == str(matches[0].id)
 
     async def test_competition_data_integrity(self, comp_repo):
         """Test that competition data is stored and retrieved correctly."""
@@ -268,7 +268,7 @@ class TestMongoCompetitionRepository:
         retrieved_comp1 = await comp_repo.get_competition(comp1.id)
         retrieved_comp2 = await comp_repo.get_competition(comp2.id)
 
-        assert any(player.id == user1.id for player in retrieved_comp1.players)
-        assert all(player.id != user2.id for player in retrieved_comp1.players)
-        assert any(player.id == user2.id for player in retrieved_comp2.players)
-        assert all(player.id != user1.id for player in retrieved_comp2.players)
+        assert any(str(player.id) == str(user1.id) for player in retrieved_comp1.players)
+        assert all(str(player.id) != str(user2.id) for player in retrieved_comp1.players)
+        assert any(str(player.id) == str(user2.id) for player in retrieved_comp2.players)
+        assert all(str(player.id) != str(user1.id) for player in retrieved_comp2.players)
