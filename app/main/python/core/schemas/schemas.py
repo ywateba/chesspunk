@@ -1,5 +1,16 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional
+
+class ResponseModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True, str_validate="always")
+
+    @field_validator("id", mode="before", check_fields=False)
+    def convert_id(cls, value):
+        if value is None or isinstance(value, str):
+            return value
+        return str(value)
 
 # --- User Schemas ---
 class UserBase(BaseModel):
@@ -22,10 +33,8 @@ class UserCreate(UserBase):
         }
     }
 
-class User(UserBase):
-    id: int
-    class ConfigDict:
-        from_attributes = True
+class User(ResponseModel, UserBase):
+    id: str
 
 class Token(BaseModel):
     access_token: str
@@ -33,8 +42,8 @@ class Token(BaseModel):
 
 # --- Match Schemas ---
 class MatchBase(BaseModel):
-    white_player_id: int
-    black_player_id: int
+    white_player_id: str
+    black_player_id: str
     result: str = "*"
 
 class MatchUpdate(BaseModel):
@@ -49,18 +58,17 @@ class MatchUpdate(BaseModel):
         }
     }
 
-class Match(MatchBase):
-    id: int
-    competition_id: int
+class Match(ResponseModel, MatchBase):
+    id: str
+    competition_id: str
     pgn_blueprint: Optional[str] = None
-    class ConfigDict:
-        from_attributes = True
 
 # --- Competition Schemas ---
 class CompetitionBase(BaseModel):
     name: str
     format: str = "round_robin"
-    community_id: Optional[int] = None
+    community_id: Optional[str] = None
+    description: Optional[str] = None
 
 class CompetitionCreate(CompetitionBase):
     model_config = {
@@ -71,13 +79,11 @@ class CompetitionCreate(CompetitionBase):
         }
     }
 
-class Competition(CompetitionBase):
-    id: int
+class Competition(ResponseModel, CompetitionBase):
+    id: str
     status: str
     players: List[User] = []
     matches: List[Match] = []
-    class ConfigDict:
-        from_attributes = True
 
 class PlayerStanding(BaseModel):
     player: User
@@ -95,21 +101,19 @@ class CommunityBase(BaseModel):
     description: Optional[str] = None
 
 class CommunityCreate(CommunityBase):
-    pass
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    is_private: bool = False
 
 class CommunityMemberSchema(BaseModel):
-    user_id: int
+    user_id: str
     role: str
     rank: int
-    class ConfigDict:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, str_validate="always")
 
-class Community(CommunityBase):
-    id: int
-    owner_id: int
+class Community(ResponseModel, CommunityBase):
+    id: str
+    owner_id: str
     members: List[CommunityMemberSchema] = []
-    class ConfigDict:
-        from_attributes = True
 
 # --- Social Schemas ---
 class PostBase(BaseModel):
@@ -118,12 +122,10 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     pass
 
-class Post(PostBase):
-    id: int
-    community_id: int
-    author_id: int
-    class ConfigDict:
-        from_attributes = True
+class Post(ResponseModel, PostBase):
+    id: str
+    community_id: str
+    author_id: str
 
 class CommentBase(BaseModel):
     content: str
@@ -131,10 +133,8 @@ class CommentBase(BaseModel):
 class CommentCreate(CommentBase):
     pass
 
-class Comment(CommentBase):
-    id: int
+class Comment(ResponseModel, CommentBase):
+    id: str
     entity_type: str
-    entity_id: int
-    author_id: int
-    class ConfigDict:
-        from_attributes = True
+    entity_id: str
+    author_id: str

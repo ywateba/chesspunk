@@ -17,7 +17,7 @@ async def get_competitions(comp_repo: CompetitionRepository, skip: int = 0, limi
     """
     return await comp_repo.get_competitions(skip=skip, limit=limit)
 
-async def get_competition(comp_repo: CompetitionRepository, competition_id: int):
+async def get_competition(comp_repo: CompetitionRepository, competition_id: str):
     """
     Retrieve specific tournament structures safely tracking 404 constraints dynamically.
     """
@@ -32,7 +32,7 @@ async def create_competition(comp_repo: CompetitionRepository, comp: schemas.Com
     """
     return await comp_repo.create_competition(comp)
 
-async def join_competition(comp_repo: CompetitionRepository, competition_id: int, current_user: models.User):
+async def join_competition(comp_repo: CompetitionRepository, competition_id: str, current_user: models.User):
     """
     Appends explicitly verified player connections natively allocating users
     as recognized contenders to designated competition rosters.
@@ -40,7 +40,7 @@ async def join_competition(comp_repo: CompetitionRepository, competition_id: int
     comp = await get_competition(comp_repo, competition_id)
     return await comp_repo.add_player_to_competition(comp, current_user)
 
-async def get_standings(comp_repo: CompetitionRepository, competition_id: int):
+async def get_standings(comp_repo: CompetitionRepository, competition_id: str):
     """
     Calculates leaderboard mechanics directly parsing tournament match outcomes dynamically.
     Points are yielded exclusively natively per FIDE rules:
@@ -90,7 +90,7 @@ async def get_standings(comp_repo: CompetitionRepository, competition_id: int):
     # Rank sorting natively prioritizing points specifically, followed by general buchholz and wins threshold
     return sorted(standings.values(), key=lambda x: (x["points"], x["buchholz"], x["wins"]), reverse=True)
 
-async def generate_matches(comp_repo: CompetitionRepository, match_repo: MatchRepository, competition_id: int):
+async def generate_matches(comp_repo: CompetitionRepository, match_repo: MatchRepository, competition_id: str):
     """
     Transforms pending empty competition constraints locking them fully active executing Round Robin structures explicitly.
     Matches every player dynamically internally calculating opposing grids seamlessly over iteration pipelines natively.
@@ -146,7 +146,7 @@ async def generate_matches(comp_repo: CompetitionRepository, match_repo: MatchRe
     
     return {"message": f"Generated {len(matches)} matches"}
 
-async def finish_competition(comp_repo: CompetitionRepository, user_repo: UserRepository, competition_id: int):
+async def finish_competition(comp_repo: CompetitionRepository, user_repo: UserRepository, competition_id: str):
     """
     Analyzes finalized competition sets computing specific Mathematical rankings updating globally tracked objects sequentially.
     """

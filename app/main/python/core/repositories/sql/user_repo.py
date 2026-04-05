@@ -16,9 +16,9 @@ class SQLUserRepository(UserRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_user(self, user_id: int) -> Optional[models.User]:
+    async def get_user(self, user_id: str) -> Optional[models.User]:
         """
-        Retrieves users explicitly via internal Integer IDs.
+        Retrieves users explicitly via internal string-based ID hashes.
         """
         result = await self.db.execute(select(models.User).filter(models.User.id == user_id))
         return result.scalars().first()
@@ -51,16 +51,18 @@ class SQLUserRepository(UserRepository):
         db_user = models.User(
             email=user.email,
             username=user.username,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            role=user.role,
+            elo=user.elo
         )
         self.db.add(db_user)
         await self.db.commit()
         await self.db.refresh(db_user)
         return db_user
 
-    async def update_user_elo(self, user_id: int, new_elo: int) -> Optional[models.User]:
+    async def update_user_elo(self, user_id: str, new_elo: int) -> Optional[models.User]:
         """
-        Calculates and commits discrete int-based Elo adjustments globally.
+        Calculates and commits discrete Elo adjustments globally for string-based IDs.
         """
         user = await self.get_user(user_id)
         if user:

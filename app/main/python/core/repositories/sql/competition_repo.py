@@ -18,7 +18,7 @@ class SQLCompetitionRepository(CompetitionRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_competition(self, competition_id: int) -> Optional[models.Competition]:
+    async def get_competition(self, competition_id: str) -> Optional[models.Competition]:
         """
         Uses explicit recursive joinedloads dynamically populating relationships.
         Loads nested Array metrics (Matches & Players) automatically via explicit SQLAlchemy configurations.
