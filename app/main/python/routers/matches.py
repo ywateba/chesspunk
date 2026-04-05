@@ -11,8 +11,11 @@ from core.auth.utils import get_current_user, RoleChecker
 from core.db import models
 from core.dependencies import get_match_repository, get_social_repository
 from core.repositories.base import MatchRepository, SocialRepository
-from core.services.match_service import update_match_result as service_update_match_result
-from core.services.chess_service import parse_bulk_pgn, evaluate_pgn_with_stockfish
+from core.services.match_service import (
+    update_match_result as service_update_match_result,
+    evaluate_match as service_evaluate_match
+)
+from core.services.chess_service import parse_bulk_pgn
 from core.rate_limit import limiter
 from typing import List
 from fastapi import Query
@@ -48,12 +51,7 @@ async def evaluate_match(request: Request, match_id: str, match_repo: MatchRepos
     """
     Spawns Stockfish microservice processes locally assigning blunder metrics asynchronously.
     """
-    match = await match_repo.get_match(match_id)
-    if not match or not match.pgn_blueprint:
-        raise HTTPException(status_code=404, detail="Match not found or PGN blueprint is missing.")
-        
-    evaluation = await evaluate_pgn_with_stockfish(match.pgn_blueprint, time_limit_ms=50)
-    return {"match_id": match_id, "evaluation": evaluation}
+    return await service_evaluate_match(match_repo, match_id)
 
 @router.post("/{match_id}/comments", response_model=schemas.Comment, summary="Comment on a match organically")
 async def create_match_comment(match_id: str, comment_data: schemas.CommentCreate, social_repo: SocialRepository = Depends(get_social_repository), current_user: models.User = Depends(get_current_user)):

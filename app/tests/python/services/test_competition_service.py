@@ -91,8 +91,8 @@ class TestCompetitionService:
         mock_comp = schemas.Competition(
             id="1", name="Tournament", format="round_robin", status="active",
             players=[
-                models.User(id="1", username="p1", email="p1@test.com", hashed_password="h1", elo=1200),
-                models.User(id="2", username="p2", email="p2@test.com", hashed_password="h2", elo=1300)
+                schemas.User(id="1", username="p1", email="p1@test.com", role="player", elo=1200),
+                schemas.User(id="2", username="p2", email="p2@test.com", role="player", elo=1300)
             ],
             matches=[]
         )
@@ -115,15 +115,15 @@ class TestCompetitionService:
         mock_repo = AsyncMock()
 
         players = [
-            models.User(id="1", username="p1", email="p1@test.com", hashed_password="h1", elo=1200),
-            models.User(id="2", username="p2", email="p2@test.com", hashed_password="h2", elo=1300),
-            models.User(id="3", username="p3", email="p3@test.com", hashed_password="h3", elo=1100)
+            schemas.User(id="1", username="p1", email="p1@test.com", role="player", elo=1200),
+            schemas.User(id="2", username="p2", email="p2@test.com", role="player", elo=1300),
+            schemas.User(id="3", username="p3", email="p3@test.com", role="player", elo=1100)
         ]
 
         matches = [
-            models.Match(id="1", competition_id="1", white_player_id="1", black_player_id="2", result=models.MatchResult.WHITE_WINS, pgn_blueprint=""),
-            models.Match(id="2", competition_id="1", white_player_id="1", black_player_id="3", result=models.MatchResult.DRAW, pgn_blueprint=""),
-            models.Match(id="3", competition_id="1", white_player_id="2", black_player_id="3", result=models.MatchResult.BLACK_WINS, pgn_blueprint="")
+            schemas.Match(id="1", competition_id="1", white_player_id="1", black_player_id="2", result=models.MatchResult.WHITE_WINS, pgn_blueprint=""),
+            schemas.Match(id="2", competition_id="1", white_player_id="1", black_player_id="3", result=models.MatchResult.DRAW, pgn_blueprint=""),
+            schemas.Match(id="3", competition_id="1", white_player_id="2", black_player_id="3", result=models.MatchResult.BLACK_WINS, pgn_blueprint="")
         ]
 
         mock_comp = schemas.Competition(
@@ -170,9 +170,9 @@ class TestCompetitionService:
         mock_match_repo = AsyncMock()
 
         players = [
-            models.User(id="1", username="p1", email="p1@test.com", hashed_password="h1", elo=1200),
-            models.User(id="2", username="p2", email="p2@test.com", hashed_password="h2", elo=1300),
-            models.User(id="3", username="p3", email="p3@test.com", hashed_password="h3", elo=1100)
+            schemas.User(id="1", username="p1", email="p1@test.com", role="player", elo=1200),
+            schemas.User(id="2", username="p2", email="p2@test.com", role="player", elo=1300),
+            schemas.User(id="3", username="p3", email="p3@test.com", role="player", elo=1100)
         ]
 
         mock_comp = schemas.Competition(
@@ -207,7 +207,7 @@ class TestCompetitionService:
 
         mock_comp = schemas.Competition(
             id="1", name="Tournament", description="Desc", max_participants=4, status="pending",
-            players=[models.User(id="1", username="p1", email="p1@test.com", hashed_password="h1", elo=1200)],
+            players=[schemas.User(id="1", username="p1", email="p1@test.com", role="player", elo=1200)],
             matches=[]
         )
 
@@ -226,12 +226,12 @@ class TestCompetitionService:
         mock_user_repo = AsyncMock()
 
         players = [
-            models.User(id="1", username="p1", email="p1@test.com", hashed_password="h1", elo=1200),
-            models.User(id="2", username="p2", email="p2@test.com", hashed_password="h2", elo=1300)
+            schemas.User(id="1", username="p1", email="p1@test.com", role="player", elo=1200),
+            schemas.User(id="2", username="p2", email="p2@test.com", role="player", elo=1300)
         ]
 
         matches = [
-            models.Match(id="1", competition_id="1", white_player_id="1", black_player_id="2",
+            schemas.Match(id="1", competition_id="1", white_player_id="1", black_player_id="2",
                         result=models.MatchResult.WHITE_WINS, pgn_blueprint="")
         ]
 

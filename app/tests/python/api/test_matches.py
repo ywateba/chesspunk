@@ -7,6 +7,10 @@ Tests all endpoints in routers/matches.py that account for the database engine i
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from unittest.mock import AsyncMock
+from core.db import models
+from core.services import match_service
 from io import BytesIO
 
 
@@ -92,6 +96,160 @@ async def test_get_match_comments_pagination(test_client: AsyncClient):
     assert response.status_code == 200
     comments = response.json()
     assert isinstance(comments, list)
+
+
+@pytest.mark.asyncio
+async def test_update_match_result_authorized(test_client: AsyncClient, db_session: AsyncSession):
+    """Test updating a match result with proper authorization."""
+    # Create organizer user
+    signup_response = await test_client.post(
+        "/auth/signup",
+        json={"username": "adminuser", "email": "admin@example.com", "password": "secretpass"}
+    )
+    assert signup_response.status_code == 200
+
+    res = await db_session.execute(select(models.User).where(models.User.username == "adminuser"))
+    admin_user = res.scalars().first()
+    admin_user.role = "admin"
+    await db_session.commit()
+
+    # Create second user
+    await test_client.post(
+        "/auth/signup",
+        json={"username": "player2", "email": "player2@example.com", "password": "secretpass"}
+    )
+
+    token_response = await test_client.post(
+        "/auth/login",
+        data={"username": "adminuser", "password": "secretpass"}
+    )
+    assert token_response.status_code == 200
+    token = token_response.json()["access_token"]
+
+    # Create competition via API
+    comp_response = await test_client.post(
+        "/competitions/",
+        json={"name": "Match Update Test"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert comp_response.status_code == 200
+    comp_id = comp_response.json()["id"]
+
+    # Join competition with both players
+    await test_client.post(f"/competitions/{comp_id}/join", headers={"Authorization": f"Bearer {token}"})
+    
+    token2_response = await test_client.post(
+        "/auth/login",
+        data={"username": "player2", "password": "secretpass"}
+    )
+    token2 = token2_response.json()["access_token"]
+    await test_client.post(f"/competitions/{comp_id}/join", headers={"Authorization": f"Bearer {token2}"})
+
+    # Generate matches
+    gen_response = await test_client.post(
+        f"/competitions/{comp_id}/generate-matches",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert gen_response.status_code == 200
+
+    # Get match from competition
+    comp_details = await test_client.get(f"/competitions/{comp_id}")
+    assert comp_details.status_code == 200
+    matches = comp_details.json()["matches"]
+    assert len(matches) == 1
+    match_id = matches[0]["id"]
+
+    # Update match result
+    response = await test_client.put(
+        f"/matches/{match_id}",
+        json={"result": "1-0", "pgn_blueprint": "1. e4 e5 *"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["result"] == "1-0"
+    assert payload["pgn_blueprint"] == "1. e4 e5 *"
+
+
+@pytest.mark.asyncio
+async def test_evaluate_match_authorized(test_client: AsyncClient, db_session: AsyncSession, monkeypatch):
+    """Test evaluating a match via the evaluate endpoint."""
+    # Create organizer user
+    signup_response = await test_client.post(
+        "/auth/signup",
+        json={"username": "evaluser", "email": "eval@example.com", "password": "secretpass"}
+    )
+    assert signup_response.status_code == 200
+
+    res = await db_session.execute(select(models.User).where(models.User.username == "evaluser"))
+    user = res.scalars().first()
+    user.role = "organizer"
+    await db_session.commit()
+
+    # Create second user
+    await test_client.post(
+        "/auth/signup",
+        json={"username": "player2", "email": "player2@example.com", "password": "secretpass"}
+    )
+
+    login_response = await test_client.post(
+        "/auth/login",
+        data={"username": "evaluser", "password": "secretpass"}
+    )
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+
+    # Create competition via API
+    comp_response = await test_client.post(
+        "/competitions/",
+        json={"name": "Evaluation Test"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert comp_response.status_code == 200
+    comp_id = comp_response.json()["id"]
+
+    # Join competition with both players
+    await test_client.post(f"/competitions/{comp_id}/join", headers={"Authorization": f"Bearer {token}"})
+    
+    token2_response = await test_client.post(
+        "/auth/login",
+        data={"username": "player2", "password": "secretpass"}
+    )
+    token2 = token2_response.json()["access_token"]
+    await test_client.post(f"/competitions/{comp_id}/join", headers={"Authorization": f"Bearer {token2}"})
+
+    # Generate matches
+    gen_response = await test_client.post(
+        f"/competitions/{comp_id}/generate-matches",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert gen_response.status_code == 200
+
+    # Get match from competition
+    comp_details = await test_client.get(f"/competitions/{comp_id}")
+    assert comp_details.status_code == 200
+    matches = comp_details.json()["matches"]
+    assert len(matches) == 1
+    match_id = matches[0]["id"]
+
+    # Update match with PGN first
+    await test_client.put(
+        f"/matches/{match_id}",
+        json={"result": "1-0", "pgn_blueprint": "1. e4 e5 *"},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    mock_eval = AsyncMock(return_value={"bestmove": "e4"})
+    monkeypatch.setattr(match_service, "evaluate_pgn_with_stockfish", mock_eval)
+
+    response = await test_client.post(
+        f"/matches/{match_id}/evaluate",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"match_id": match_id, "evaluation": {"bestmove": "e4"}}
 
 
 # Note: Full integration tests for matches would require:

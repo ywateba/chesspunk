@@ -75,3 +75,51 @@ class TestMatchService:
 
         assert result == updated_match
         mock_repo.update_match.assert_called_once_with(mock_match, result=models.MatchResult.DRAW, pgn_blueprint=None)
+
+    @pytest.mark.asyncio
+    async def test_evaluate_match_success(self, monkeypatch):
+        """Test successfully evaluating a match with PGN data."""
+        mock_repo = AsyncMock()
+        mock_match = models.Match(
+            id="1", competition_id="1", white_player_id="1", black_player_id="2",
+            result=models.MatchResult.WHITE_WINS, pgn_blueprint="1. e4 e5 *"
+        )
+        mock_repo.get_match.return_value = mock_match
+
+        mock_evaluation = {"bestmove": "e4"}
+        mock_eval_fn = AsyncMock(return_value=mock_evaluation)
+        monkeypatch.setattr(match_service, "evaluate_pgn_with_stockfish", mock_eval_fn)
+
+        result = await match_service.evaluate_match(mock_repo, "1", time_limit_ms=25)
+
+        assert result == {"match_id": "1", "evaluation": mock_evaluation}
+        mock_repo.get_match.assert_called_once_with("1")
+        mock_eval_fn.assert_awaited_once_with(mock_match.pgn_blueprint, time_limit_ms=25)
+
+    @pytest.mark.asyncio
+    async def test_evaluate_match_not_found(self):
+        """Test evaluating a non-existent match raises 404."""
+        mock_repo = AsyncMock()
+        mock_repo.get_match.return_value = None
+
+        with pytest.raises(HTTPException) as exc_info:
+            await match_service.evaluate_match(mock_repo, "999")
+
+        assert exc_info.value.status_code == 404
+        assert "Match not found" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_evaluate_match_missing_pgn(self):
+        """Test evaluating a match without PGN raises 404."""
+        mock_repo = AsyncMock()
+        mock_match = models.Match(
+            id="1", competition_id="1", white_player_id="1", black_player_id="2",
+            result=models.MatchResult.WHITE_WINS, pgn_blueprint=""
+        )
+        mock_repo.get_match.return_value = mock_match
+
+        with pytest.raises(HTTPException) as exc_info:
+            await match_service.evaluate_match(mock_repo, "1")
+
+        assert exc_info.value.status_code == 404
+        assert "PGN blueprint is missing" in exc_info.value.detail
