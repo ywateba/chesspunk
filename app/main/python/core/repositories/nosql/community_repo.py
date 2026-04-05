@@ -5,7 +5,6 @@ Persists embedded ODM arrays utilizing Beanie inherently bypassing explicit rela
 """
 
 from typing import List, Optional, Any
-from bson import ObjectId
 from pydantic import ValidationError
 from core.repositories.base import CommunityRepository
 from core.schemas import schemas

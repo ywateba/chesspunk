@@ -6,10 +6,7 @@ Tests all endpoints in routers/matches.py that account for the database engine i
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from unittest.mock import AsyncMock
-from core.db import models
 from core.services import match_service
 from io import BytesIO
 
@@ -99,21 +96,14 @@ async def test_get_match_comments_pagination(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_match_result_authorized(test_client: AsyncClient, db_session: AsyncSession):
+async def test_update_match_result_authorized(test_client: AsyncClient):
     """Test updating a match result with proper authorization."""
-    # Create organizer user
     signup_response = await test_client.post(
         "/auth/signup",
-        json={"username": "adminuser", "email": "admin@example.com", "password": "secretpass"}
+        json={"username": "adminuser", "email": "admin@example.com", "password": "secretpass", "role": "admin"}
     )
     assert signup_response.status_code == 200
 
-    res = await db_session.execute(select(models.User).where(models.User.username == "adminuser"))
-    admin_user = res.scalars().first()
-    admin_user.role = "admin"
-    await db_session.commit()
-
-    # Create second user
     await test_client.post(
         "/auth/signup",
         json={"username": "player2", "email": "player2@example.com", "password": "secretpass"}
@@ -173,21 +163,14 @@ async def test_update_match_result_authorized(test_client: AsyncClient, db_sessi
 
 
 @pytest.mark.asyncio
-async def test_evaluate_match_authorized(test_client: AsyncClient, db_session: AsyncSession, monkeypatch):
+async def test_evaluate_match_authorized(test_client: AsyncClient, monkeypatch):
     """Test evaluating a match via the evaluate endpoint."""
-    # Create organizer user
     signup_response = await test_client.post(
         "/auth/signup",
-        json={"username": "evaluser", "email": "eval@example.com", "password": "secretpass"}
+        json={"username": "evaluser", "email": "eval@example.com", "password": "secretpass", "role": "organizer"}
     )
     assert signup_response.status_code == 200
 
-    res = await db_session.execute(select(models.User).where(models.User.username == "evaluser"))
-    user = res.scalars().first()
-    user.role = "organizer"
-    await db_session.commit()
-
-    # Create second user
     await test_client.post(
         "/auth/signup",
         json={"username": "player2", "email": "player2@example.com", "password": "secretpass"}

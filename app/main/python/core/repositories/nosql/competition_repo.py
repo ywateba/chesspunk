@@ -6,10 +6,10 @@ secondary Beanie asynchronous sweeps extracting matches explicitly matching ID f
 """
 
 from typing import List, Optional, Any
+from beanie import PydanticObjectId
 from core.repositories.base import CompetitionRepository
 from core.schemas import schemas
 from core.db.documents import CompetitionDocument, UserDocument, MatchDocument
-from bson import ObjectId
 
 class MongoCompetitionRepository(CompetitionRepository):
     async def get_competition(self, competition_id: str) -> Optional[Any]:
@@ -22,7 +22,7 @@ class MongoCompetitionRepository(CompetitionRepository):
             return None
 
         if comp.players:
-            object_ids = [ObjectId(pid) for pid in comp.players]
+            object_ids = [PydanticObjectId(pid) for pid in comp.players]
             comp.players = await UserDocument.find({"_id": {"$in": object_ids}}).to_list()
         else:
             comp.players = []

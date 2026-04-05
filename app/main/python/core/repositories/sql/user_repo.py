@@ -51,7 +51,9 @@ class SQLUserRepository(UserRepository):
         db_user = models.User(
             email=user.email,
             username=user.username,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            role=user.role,
+            elo=user.elo
         )
         self.db.add(db_user)
         await self.db.commit()

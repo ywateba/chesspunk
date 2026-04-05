@@ -1,22 +1,15 @@
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from core.db import models
 
 @pytest.fixture
-async def organizer_user(test_client: AsyncClient, db_session: AsyncSession):
+async def organizer_user(test_client: AsyncClient):
     """Create and return an organizer user for testing."""
-    # Create user
-    await test_client.post("/auth/signup", json={"username": "alice", "email": "alice@test.com", "password": "pass"})
-    
-    # Make organizer via database (acceptable for integration test setup)
-    res = await db_session.execute(select(models.User).where(models.User.username == "alice"))
-    u = res.scalars().first()
-    u.role = "organizer"
-    await db_session.commit()
-    
-    # Login and return token
+    signup_response = await test_client.post(
+        "/auth/signup",
+        json={"username": "alice", "email": "alice@test.com", "password": "pass", "role": "organizer"}
+    )
+    assert signup_response.status_code == 200
+
     token = (await test_client.post("/auth/login", data={"username": "alice", "password": "pass"})).json()["access_token"]
     return {"username": "alice", "token": token}
 

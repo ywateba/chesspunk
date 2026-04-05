@@ -1,7 +1,16 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional
+
+class ResponseModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True, str_validate="always")
+
+    @field_validator("id", mode="before", check_fields=False)
+    def convert_id(cls, value):
+        if value is None or isinstance(value, str):
+            return value
+        return str(value)
 
 # --- User Schemas ---
 class UserBase(BaseModel):
@@ -24,10 +33,8 @@ class UserCreate(UserBase):
         }
     }
 
-class User(UserBase):
+class User(ResponseModel, UserBase):
     id: str
-    class ConfigDict:
-        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -51,12 +58,10 @@ class MatchUpdate(BaseModel):
         }
     }
 
-class Match(MatchBase):
+class Match(ResponseModel, MatchBase):
     id: str
     competition_id: str
     pgn_blueprint: Optional[str] = None
-    class ConfigDict:
-        from_attributes = True
 
 # --- Competition Schemas ---
 class CompetitionBase(BaseModel):
@@ -74,13 +79,11 @@ class CompetitionCreate(CompetitionBase):
         }
     }
 
-class Competition(CompetitionBase):
+class Competition(ResponseModel, CompetitionBase):
     id: str
     status: str
     players: List[User] = []
     matches: List[Match] = []
-    class ConfigDict:
-        from_attributes = True
 
 class PlayerStanding(BaseModel):
     player: User
@@ -105,15 +108,12 @@ class CommunityMemberSchema(BaseModel):
     user_id: str
     role: str
     rank: int
-    class ConfigDict:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, str_validate="always")
 
-class Community(CommunityBase):
+class Community(ResponseModel, CommunityBase):
     id: str
     owner_id: str
     members: List[CommunityMemberSchema] = []
-    class ConfigDict:
-        from_attributes = True
 
 # --- Social Schemas ---
 class PostBase(BaseModel):
@@ -122,12 +122,10 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     pass
 
-class Post(PostBase):
+class Post(ResponseModel, PostBase):
     id: str
     community_id: str
     author_id: str
-    class ConfigDict:
-        from_attributes = True
 
 class CommentBase(BaseModel):
     content: str
@@ -135,10 +133,8 @@ class CommentBase(BaseModel):
 class CommentCreate(CommentBase):
     pass
 
-class Comment(CommentBase):
+class Comment(ResponseModel, CommentBase):
     id: str
     entity_type: str
     entity_id: str
     author_id: str
-    class ConfigDict:
-        from_attributes = True
