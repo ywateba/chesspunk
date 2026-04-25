@@ -1,0 +1,175 @@
+service: chesspunk-serverless
+
+frameworkVersion: '4'
+org: ywateba
+app: chesspunk
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - dynamodb:*
+          Resource: 
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/Users"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/Competitions"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/Matches"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/Communities"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/Social"
+  httpApi:
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: 
+          Fn::Join:
+            - ""
+            - - "https://cognito-idp."
+              - "${self:provider.region}"
+              - ".amazonaws.com/"
+              - Ref: CognitoUserPool
+        audience:
+          - Ref: CognitoUserPoolClient
+
+plugins:
+  - serverless-python-requirements
+
+
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!.tox/**"
+    - "!tests/**"
+    - "!main/**" 
+    - "serverless/**"
+
+functions:
+  api:
+    handler: serverless/handler.lambda_handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: '*'
+          # We can map specific authorizers locally in Powertools, or apply a global authorizer across the HTTP API directly.
+      - httpApi:
+          path: /
+          method: '*'
+
+resources:
+  Resources:
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: chesspunk-pool-${self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: chesspunk-client-${self:provider.stage}
+        UserPoolId:
+          Ref: CognitoUserPool
+        ExplicitAuthFlows:
+          - ADMIN_NO_SRP_AUTH
+
+    ApiDistribution:
+      Type: AWS::CloudFront::Distribution
+      DependsOn:
+        - HttpApi
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultCacheBehavior:
+            TargetOriginId: HttpApiOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - Authorization
+          Origins:
+            - Id: HttpApiOrigin
+              DomainName: 
+                Fn::Join:
+                  - ""
+                  - - Ref: HttpApi
+                    - ".execute-api."
+                    - "${self:provider.region}"
+                    - ".amazonaws.com"
+              CustomOriginConfig:
+                OriginProtocolPolicy: https-only
+
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Users
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        
+    CompetitionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Competitions
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    MatchesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Matches
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    CommunitiesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Communities
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    SocialTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Social
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
