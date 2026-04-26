@@ -1,0 +1,6 @@
+aws-lambda-powertools
+boto3
+moto
+pytest
+pytest-cov
+python-chess

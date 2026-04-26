@@ -1,11 +1,9 @@
 import os
 from unittest.mock import patch
-from serverless.dynamodb import initialize_tables
 from serverless.handlers import competitions, matches
 
 @patch.dict(os.environ, {"AWS_DEFAULT_REGION": "us-east-1"})
-def test_competition_fide_lifecycle(aws_credentials, dynamodb_mock):
-    initialize_tables()
+def test_competition_fide_lifecycle():
 
     # 1. Create Competition
     comp = competitions.create_competition({"name": "FIDE Qualifier"})

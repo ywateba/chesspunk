@@ -3,8 +3,8 @@ import os
 from moto import mock_aws
 import sys
 
-# Ensure serverless path resolves gracefully under pytest
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../serverless')))
+# Ensure the 'app' root resolves gracefully under pytest
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 
 from serverless.dynamodb import init_tables
 

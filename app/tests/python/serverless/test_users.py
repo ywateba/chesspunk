@@ -1,12 +1,10 @@
 import os
 from unittest.mock import patch
-from serverless.dynamodb import initialize_tables
 from serverless.handlers import users
 
 @patch.dict(os.environ, {"AWS_DEFAULT_REGION": "us-east-1"})
-def test_user_lifecycle(aws_credentials, dynamodb_mock):
+def test_user_lifecycle():
     # Ensure tables are created in the mock DB natively
-    initialize_tables()
 
     # 1. Create a user via explicit core function
     user = users.create_user({"email": "test@chesspunk.com", "role": "player", "elo": 1500})

@@ -1,0 +1,2014 @@
+{
+  "/home/arywatt/code/projects/chesspunk/app/serverless.yml": {
+    "versionFramework": "4.34.0",
+    "servicePath": "/home/arywatt/code/projects/chesspunk/app/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "chesspunk-serverless",
+      "frameworkVersion": "4",
+      "org": "ywateba",
+      "app": "chesspunk",
+      "provider": {
+        "name": "aws",
+        "runtime": "python3.10",
+        "region": "us-east-1",
+        "stage": "dev",
+        "iam": {
+          "role": {
+            "statements": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "dynamodb:*"
+                ],
+                "Resource": [
+                  "arn:aws:dynamodb:us-east-1:*:table/Users",
+                  "arn:aws:dynamodb:us-east-1:*:table/Competitions",
+                  "arn:aws:dynamodb:us-east-1:*:table/Matches",
+                  "arn:aws:dynamodb:us-east-1:*:table/Communities",
+                  "arn:aws:dynamodb:us-east-1:*:table/Social"
+                ]
+              }
+            ]
+          }
+        },
+        "httpApi": {
+          "authorizers": {
+            "cognitoAuthorizer": {
+              "type": "jwt",
+              "identitySource": "$request.header.Authorization",
+              "issuerUrl": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://cognito-idp.",
+                    "us-east-1",
+                    ".amazonaws.com/",
+                    {
+                      "Ref": "CognitoUserPool"
+                    }
+                  ]
+                ]
+              },
+              "audience": [
+                {
+                  "Ref": "CognitoUserPoolClient"
+                }
+              ]
+            }
+          }
+        },
+        "versionFunctions": true,
+        "compiledCloudFormationTemplate": {
+          "AWSTemplateFormatVersion": "2010-09-09",
+          "Description": "The AWS CloudFormation template for this Serverless application",
+          "Resources": {
+            "ApiLogGroup": {
+              "Type": "AWS::Logs::LogGroup",
+              "Properties": {
+                "LogGroupName": "/aws/lambda/chesspunk-serverless-dev-api"
+              }
+            },
+            "IamRoleLambdaExecution": {
+              "Type": "AWS::IAM::Role",
+              "Properties": {
+                "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": {
+                        "Service": [
+                          "lambda.amazonaws.com"
+                        ]
+                      },
+                      "Action": [
+                        "sts:AssumeRole"
+                      ]
+                    }
+                  ]
+                },
+                "Policies": [
+                  {
+                    "PolicyName": {
+                      "Fn::Join": [
+                        "-",
+                        [
+                          "chesspunk-serverless",
+                          "dev",
+                          "lambda"
+                        ]
+                      ]
+                    },
+                    "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:CreateLogStream",
+                            "logs:CreateLogGroup",
+                            "logs:TagResource"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                            {
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*:*"
+                            }
+                          ]
+                        },
+                        {
+                          "Effect": "Allow",
+                          "Action": [
+                            "dynamodb:*"
+                          ],
+                          "Resource": [
+                            "arn:aws:dynamodb:us-east-1:*:table/Users",
+                            "arn:aws:dynamodb:us-east-1:*:table/Competitions",
+                            "arn:aws:dynamodb:us-east-1:*:table/Matches",
+                            "arn:aws:dynamodb:us-east-1:*:table/Communities",
+                            "arn:aws:dynamodb:us-east-1:*:table/Social"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "Path": "/",
+                "RoleName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "chesspunk-serverless",
+                      "dev",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      "lambdaRole"
+                    ]
+                  ]
+                }
+              }
+            },
+            "ApiLambdaFunction": {
+              "Type": "AWS::Lambda::Function",
+              "Properties": {
+                "Code": {
+                  "S3Bucket": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+                  "S3Key": "serverless/chesspunk-serverless/dev/1777122647550-2026-04-25T13:10:47.550Z/chesspunk-serverless.zip"
+                },
+                "Handler": "serverless/handler.lambda_handler",
+                "Runtime": "python3.10",
+                "FunctionName": "chesspunk-serverless-dev-api",
+                "MemorySize": 1024,
+                "Timeout": 6,
+                "Role": {
+                  "Fn::GetAtt": [
+                    "IamRoleLambdaExecution",
+                    "Arn"
+                  ]
+                }
+              },
+              "DependsOn": [
+                "ApiLogGroup"
+              ]
+            },
+            "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI": {
+              "Type": "AWS::Lambda::Version",
+              "DeletionPolicy": "Retain",
+              "Properties": {
+                "FunctionName": {
+                  "Ref": "ApiLambdaFunction"
+                },
+                "CodeSha256": "t3lFwSKxGjLikTwjkeIn8GDDp3fJBmGoG0sluk6IwI8="
+              }
+            },
+            "HttpApi": {
+              "Type": "AWS::ApiGatewayV2::Api",
+              "Properties": {
+                "Name": "dev-chesspunk-serverless",
+                "ProtocolType": "HTTP"
+              }
+            },
+            "HttpApiStage": {
+              "Type": "AWS::ApiGatewayV2::Stage",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "StageName": "$default",
+                "AutoDeploy": true,
+                "DefaultRouteSettings": {
+                  "DetailedMetricsEnabled": false
+                }
+              }
+            },
+            "HttpApiAuthorizerCognitoAuthorizer": {
+              "Type": "AWS::ApiGatewayV2::Authorizer",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "Name": "cognitoAuthorizer",
+                "IdentitySource": [
+                  "$request.header.Authorization"
+                ],
+                "AuthorizerType": "JWT",
+                "JwtConfiguration": {
+                  "Audience": [
+                    {
+                      "Ref": "CognitoUserPoolClient"
+                    }
+                  ],
+                  "Issuer": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "https://cognito-idp.",
+                        "us-east-1",
+                        ".amazonaws.com/",
+                        {
+                          "Ref": "CognitoUserPool"
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            },
+            "ApiLambdaPermissionHttpApi": {
+              "Type": "AWS::Lambda::Permission",
+              "Properties": {
+                "FunctionName": {
+                  "Fn::GetAtt": [
+                    "ApiLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "apigateway.amazonaws.com",
+                "SourceArn": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":execute-api:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":",
+                      {
+                        "Ref": "HttpApi"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              }
+            },
+            "HttpApiIntegrationApi": {
+              "Type": "AWS::ApiGatewayV2::Integration",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "IntegrationType": "AWS_PROXY",
+                "IntegrationUri": {
+                  "Fn::GetAtt": [
+                    "ApiLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "PayloadFormatVersion": "2.0",
+                "TimeoutInMillis": 30000
+              }
+            },
+            "HttpApiRouteAnyProxyVar": {
+              "Type": "AWS::ApiGatewayV2::Route",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "RouteKey": "ANY /{proxy+}",
+                "Target": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "integrations",
+                      {
+                        "Ref": "HttpApiIntegrationApi"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "DependsOn": "HttpApiIntegrationApi"
+            },
+            "HttpApiRouteAny": {
+              "Type": "AWS::ApiGatewayV2::Route",
+              "Properties": {
+                "ApiId": {
+                  "Ref": "HttpApi"
+                },
+                "RouteKey": "ANY /",
+                "Target": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "integrations",
+                      {
+                        "Ref": "HttpApiIntegrationApi"
+                      }
+                    ]
+                  ]
+                }
+              },
+              "DependsOn": "HttpApiIntegrationApi"
+            },
+            "CognitoUserPool": {
+              "Type": "AWS::Cognito::UserPool",
+              "Properties": {
+                "UserPoolName": "chesspunk-pool-dev",
+                "UsernameAttributes": [
+                  "email"
+                ],
+                "AutoVerifiedAttributes": [
+                  "email"
+                ]
+              }
+            },
+            "CognitoUserPoolClient": {
+              "Type": "AWS::Cognito::UserPoolClient",
+              "Properties": {
+                "ClientName": "chesspunk-client-dev",
+                "UserPoolId": {
+                  "Ref": "CognitoUserPool"
+                },
+                "ExplicitAuthFlows": [
+                  "ADMIN_NO_SRP_AUTH"
+                ]
+              }
+            },
+            "ApiDistribution": {
+              "Type": "AWS::CloudFront::Distribution",
+              "DependsOn": [
+                "HttpApi"
+              ],
+              "Properties": {
+                "DistributionConfig": {
+                  "Enabled": true,
+                  "DefaultCacheBehavior": {
+                    "TargetOriginId": "HttpApiOrigin",
+                    "ViewerProtocolPolicy": "redirect-to-https",
+                    "AllowedMethods": [
+                      "GET",
+                      "HEAD",
+                      "OPTIONS",
+                      "PUT",
+                      "PATCH",
+                      "POST",
+                      "DELETE"
+                    ],
+                    "ForwardedValues": {
+                      "QueryString": true,
+                      "Headers": [
+                        "Authorization"
+                      ]
+                    }
+                  },
+                  "Origins": [
+                    {
+                      "Id": "HttpApiOrigin",
+                      "DomainName": {
+                        "Fn::Join": [
+                          "",
+                          [
+                            {
+                              "Ref": "HttpApi"
+                            },
+                            ".execute-api.",
+                            "us-east-1",
+                            ".amazonaws.com"
+                          ]
+                        ]
+                      },
+                      "CustomOriginConfig": {
+                        "OriginProtocolPolicy": "https-only"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "UsersTable": {
+              "Type": "AWS::DynamoDB::Table",
+              "Properties": {
+                "TableName": "Users",
+                "AttributeDefinitions": [
+                  {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                  }
+                ],
+                "KeySchema": [
+                  {
+                    "AttributeName": "id",
+                    "KeyType": "HASH"
+                  }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+              }
+            },
+            "CompetitionsTable": {
+              "Type": "AWS::DynamoDB::Table",
+              "Properties": {
+                "TableName": "Competitions",
+                "AttributeDefinitions": [
+                  {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                  }
+                ],
+                "KeySchema": [
+                  {
+                    "AttributeName": "id",
+                    "KeyType": "HASH"
+                  }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+              }
+            },
+            "MatchesTable": {
+              "Type": "AWS::DynamoDB::Table",
+              "Properties": {
+                "TableName": "Matches",
+                "AttributeDefinitions": [
+                  {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                  }
+                ],
+                "KeySchema": [
+                  {
+                    "AttributeName": "id",
+                    "KeyType": "HASH"
+                  }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+              }
+            },
+            "CommunitiesTable": {
+              "Type": "AWS::DynamoDB::Table",
+              "Properties": {
+                "TableName": "Communities",
+                "AttributeDefinitions": [
+                  {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                  }
+                ],
+                "KeySchema": [
+                  {
+                    "AttributeName": "id",
+                    "KeyType": "HASH"
+                  }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+              }
+            },
+            "SocialTable": {
+              "Type": "AWS::DynamoDB::Table",
+              "Properties": {
+                "TableName": "Social",
+                "AttributeDefinitions": [
+                  {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                  }
+                ],
+                "KeySchema": [
+                  {
+                    "AttributeName": "id",
+                    "KeyType": "HASH"
+                  }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+              }
+            }
+          },
+          "Outputs": {
+            "ServerlessDeploymentBucketName": {
+              "Value": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+              "Export": {
+                "Name": "sls-chesspunk-serverless-dev-ServerlessDeploymentBucketName"
+              }
+            },
+            "ApiLambdaFunctionQualifiedArn": {
+              "Description": "Current Lambda function version",
+              "Value": {
+                "Ref": "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI"
+              },
+              "Export": {
+                "Name": "sls-chesspunk-serverless-dev-ApiLambdaFunctionQualifiedArn"
+              }
+            },
+            "HttpApiId": {
+              "Description": "Id of the HTTP API",
+              "Value": {
+                "Ref": "HttpApi"
+              },
+              "Export": {
+                "Name": "sls-chesspunk-serverless-dev-HttpApiId"
+              }
+            },
+            "HttpApiUrl": {
+              "Description": "URL of the HTTP API",
+              "Value": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    ".execute-api.",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ".",
+                    {
+                      "Ref": "AWS::URLSuffix"
+                    }
+                  ]
+                ]
+              },
+              "Export": {
+                "Name": "sls-chesspunk-serverless-dev-HttpApiUrl"
+              }
+            }
+          }
+        },
+        "vpc": {}
+      },
+      "plugins": [
+        "serverless-python-requirements"
+      ],
+      "package": {
+        "patterns": [
+          "!node_modules/**",
+          "!.tox/**",
+          "!tests/**",
+          "!main/**",
+          "serverless/**"
+        ],
+        "artifactsS3KeyDirname": "serverless/chesspunk-serverless/dev/code-artifacts",
+        "deploymentBucket": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+        "artifact": "/home/arywatt/code/projects/chesspunk/app/.serverless/chesspunk-serverless.zip",
+        "artifactDirectoryName": "serverless/chesspunk-serverless/dev/1777122647550-2026-04-25T13:10:47.550Z"
+      },
+      "functions": {
+        "api": {
+          "handler": "serverless/handler.lambda_handler",
+          "events": [
+            {
+              "httpApi": {
+                "path": "/{proxy+}",
+                "method": "*"
+              },
+              "resolvedMethod": "ANY",
+              "resolvedPath": "/{proxy+}"
+            },
+            {
+              "httpApi": {
+                "path": "/",
+                "method": "*"
+              },
+              "resolvedMethod": "ANY",
+              "resolvedPath": "/"
+            }
+          ],
+          "name": "chesspunk-serverless-dev-api",
+          "package": {},
+          "memory": 1024,
+          "timeout": 6,
+          "runtime": "python3.10",
+          "vpc": {},
+          "versionLogicalId": "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI"
+        }
+      },
+      "resources": {
+        "Resources": {
+          "CognitoUserPool": {
+            "Type": "AWS::Cognito::UserPool",
+            "Properties": {
+              "UserPoolName": "chesspunk-pool-dev",
+              "UsernameAttributes": [
+                "email"
+              ],
+              "AutoVerifiedAttributes": [
+                "email"
+              ]
+            }
+          },
+          "CognitoUserPoolClient": {
+            "Type": "AWS::Cognito::UserPoolClient",
+            "Properties": {
+              "ClientName": "chesspunk-client-dev",
+              "UserPoolId": {
+                "Ref": "CognitoUserPool"
+              },
+              "ExplicitAuthFlows": [
+                "ADMIN_NO_SRP_AUTH"
+              ]
+            }
+          },
+          "ApiDistribution": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+              "HttpApi"
+            ],
+            "Properties": {
+              "DistributionConfig": {
+                "Enabled": true,
+                "DefaultCacheBehavior": {
+                  "TargetOriginId": "HttpApiOrigin",
+                  "ViewerProtocolPolicy": "redirect-to-https",
+                  "AllowedMethods": [
+                    "GET",
+                    "HEAD",
+                    "OPTIONS",
+                    "PUT",
+                    "PATCH",
+                    "POST",
+                    "DELETE"
+                  ],
+                  "ForwardedValues": {
+                    "QueryString": true,
+                    "Headers": [
+                      "Authorization"
+                    ]
+                  }
+                },
+                "Origins": [
+                  {
+                    "Id": "HttpApiOrigin",
+                    "DomainName": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "HttpApi"
+                          },
+                          ".execute-api.",
+                          "us-east-1",
+                          ".amazonaws.com"
+                        ]
+                      ]
+                    },
+                    "CustomOriginConfig": {
+                      "OriginProtocolPolicy": "https-only"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "UsersTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Users",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "CompetitionsTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Competitions",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "MatchesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Matches",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "CommunitiesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Communities",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "SocialTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Social",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          }
+        },
+        "Outputs": {}
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "python3.10",
+      "region": "us-east-1",
+      "stage": "dev",
+      "iam": {
+        "role": {
+          "statements": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:*"
+              ],
+              "Resource": [
+                "arn:aws:dynamodb:us-east-1:*:table/Users",
+                "arn:aws:dynamodb:us-east-1:*:table/Competitions",
+                "arn:aws:dynamodb:us-east-1:*:table/Matches",
+                "arn:aws:dynamodb:us-east-1:*:table/Communities",
+                "arn:aws:dynamodb:us-east-1:*:table/Social"
+              ]
+            }
+          ]
+        }
+      },
+      "httpApi": {
+        "authorizers": {
+          "cognitoAuthorizer": {
+            "type": "jwt",
+            "identitySource": "$request.header.Authorization",
+            "issuerUrl": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://cognito-idp.",
+                  "us-east-1",
+                  ".amazonaws.com/",
+                  {
+                    "Ref": "CognitoUserPool"
+                  }
+                ]
+              ]
+            },
+            "audience": [
+              {
+                "Ref": "CognitoUserPoolClient"
+              }
+            ]
+          }
+        }
+      },
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ApiLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/chesspunk-serverless-dev-api"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "chesspunk-serverless",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "dynamodb:*"
+                        ],
+                        "Resource": [
+                          "arn:aws:dynamodb:us-east-1:*:table/Users",
+                          "arn:aws:dynamodb:us-east-1:*:table/Competitions",
+                          "arn:aws:dynamodb:us-east-1:*:table/Matches",
+                          "arn:aws:dynamodb:us-east-1:*:table/Communities",
+                          "arn:aws:dynamodb:us-east-1:*:table/Social"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "chesspunk-serverless",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "ApiLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+                "S3Key": "serverless/chesspunk-serverless/dev/1777122647550-2026-04-25T13:10:47.550Z/chesspunk-serverless.zip"
+              },
+              "Handler": "serverless/handler.lambda_handler",
+              "Runtime": "python3.10",
+              "FunctionName": "chesspunk-serverless-dev-api",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ApiLogGroup"
+            ]
+          },
+          "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ApiLambdaFunction"
+              },
+              "CodeSha256": "t3lFwSKxGjLikTwjkeIn8GDDp3fJBmGoG0sluk6IwI8="
+            }
+          },
+          "HttpApi": {
+            "Type": "AWS::ApiGatewayV2::Api",
+            "Properties": {
+              "Name": "dev-chesspunk-serverless",
+              "ProtocolType": "HTTP"
+            }
+          },
+          "HttpApiStage": {
+            "Type": "AWS::ApiGatewayV2::Stage",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "StageName": "$default",
+              "AutoDeploy": true,
+              "DefaultRouteSettings": {
+                "DetailedMetricsEnabled": false
+              }
+            }
+          },
+          "HttpApiAuthorizerCognitoAuthorizer": {
+            "Type": "AWS::ApiGatewayV2::Authorizer",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "Name": "cognitoAuthorizer",
+              "IdentitySource": [
+                "$request.header.Authorization"
+              ],
+              "AuthorizerType": "JWT",
+              "JwtConfiguration": {
+                "Audience": [
+                  {
+                    "Ref": "CognitoUserPoolClient"
+                  }
+                ],
+                "Issuer": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "https://cognito-idp.",
+                      "us-east-1",
+                      ".amazonaws.com/",
+                      {
+                        "Ref": "CognitoUserPool"
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "ApiLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ApiLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationApi": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "Fn::GetAtt": [
+                  "ApiLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteAnyProxyVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "ANY /{proxy+}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationApi"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationApi"
+          },
+          "HttpApiRouteAny": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "ANY /",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationApi"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationApi"
+          },
+          "CognitoUserPool": {
+            "Type": "AWS::Cognito::UserPool",
+            "Properties": {
+              "UserPoolName": "chesspunk-pool-dev",
+              "UsernameAttributes": [
+                "email"
+              ],
+              "AutoVerifiedAttributes": [
+                "email"
+              ]
+            }
+          },
+          "CognitoUserPoolClient": {
+            "Type": "AWS::Cognito::UserPoolClient",
+            "Properties": {
+              "ClientName": "chesspunk-client-dev",
+              "UserPoolId": {
+                "Ref": "CognitoUserPool"
+              },
+              "ExplicitAuthFlows": [
+                "ADMIN_NO_SRP_AUTH"
+              ]
+            }
+          },
+          "ApiDistribution": {
+            "Type": "AWS::CloudFront::Distribution",
+            "DependsOn": [
+              "HttpApi"
+            ],
+            "Properties": {
+              "DistributionConfig": {
+                "Enabled": true,
+                "DefaultCacheBehavior": {
+                  "TargetOriginId": "HttpApiOrigin",
+                  "ViewerProtocolPolicy": "redirect-to-https",
+                  "AllowedMethods": [
+                    "GET",
+                    "HEAD",
+                    "OPTIONS",
+                    "PUT",
+                    "PATCH",
+                    "POST",
+                    "DELETE"
+                  ],
+                  "ForwardedValues": {
+                    "QueryString": true,
+                    "Headers": [
+                      "Authorization"
+                    ]
+                  }
+                },
+                "Origins": [
+                  {
+                    "Id": "HttpApiOrigin",
+                    "DomainName": {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "HttpApi"
+                          },
+                          ".execute-api.",
+                          "us-east-1",
+                          ".amazonaws.com"
+                        ]
+                      ]
+                    },
+                    "CustomOriginConfig": {
+                      "OriginProtocolPolicy": "https-only"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "UsersTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Users",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "CompetitionsTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Competitions",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "MatchesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Matches",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "CommunitiesTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Communities",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          },
+          "SocialTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "TableName": "Social",
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "id",
+                  "AttributeType": "S"
+                }
+              ],
+              "KeySchema": [
+                {
+                  "AttributeName": "id",
+                  "KeyType": "HASH"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST"
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+            "Export": {
+              "Name": "sls-chesspunk-serverless-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "ApiLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI"
+            },
+            "Export": {
+              "Name": "sls-chesspunk-serverless-dev-ApiLambdaFunctionQualifiedArn"
+            }
+          },
+          "HttpApiId": {
+            "Description": "Id of the HTTP API",
+            "Value": {
+              "Ref": "HttpApi"
+            },
+            "Export": {
+              "Name": "sls-chesspunk-serverless-dev-HttpApiId"
+            }
+          },
+          "HttpApiUrl": {
+            "Description": "URL of the HTTP API",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  }
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-chesspunk-serverless-dev-HttpApiUrl"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "dashboard": {
+      "isEnabledForService": true,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": {
+        "providers": false,
+        "monitoring": false
+      },
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": "8yJxsGdJH6T1K4z45M",
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: chesspunk-serverless\n\nframeworkVersion: '4'\norg: ywateba\napp: chesspunk\nprovider:\n  name: aws\n  runtime: python3.10\n  region: us-east-1\n  stage: ${opt:stage, 'dev'}\n  iam:\n    role:\n      statements:\n        - Effect: \"Allow\"\n          Action:\n            - dynamodb:*\n          Resource: \n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/Users\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/Competitions\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/Matches\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/Communities\"\n            - \"arn:aws:dynamodb:${self:provider.region}:*:table/Social\"\n  httpApi:\n    authorizers:\n      cognitoAuthorizer:\n        type: jwt\n        identitySource: $request.header.Authorization\n        issuerUrl: \n          Fn::Join:\n            - \"\"\n            - - \"https://cognito-idp.\"\n              - \"${self:provider.region}\"\n              - \".amazonaws.com/\"\n              - Ref: CognitoUserPool\n        audience:\n          - Ref: CognitoUserPoolClient\n\nplugins:\n  - serverless-python-requirements\n\n\n\npackage:\n  patterns:\n    - \"!node_modules/**\"\n    - \"!.tox/**\"\n    - \"!tests/**\"\n    - \"!main/**\" \n    - \"serverless/**\"\n\nfunctions:\n  api:\n    handler: serverless/handler.lambda_handler\n    events:\n      - httpApi:\n          path: /{proxy+}\n          method: '*'\n          # We can map specific authorizers locally in Powertools, or apply a global authorizer across the HTTP API directly.\n      - httpApi:\n          path: /\n          method: '*'\n\nresources:\n  Resources:\n    CognitoUserPool:\n      Type: AWS::Cognito::UserPool\n      Properties:\n        UserPoolName: chesspunk-pool-${self:provider.stage}\n        UsernameAttributes:\n          - email\n        AutoVerifiedAttributes:\n          - email\n\n    CognitoUserPoolClient:\n      Type: AWS::Cognito::UserPoolClient\n      Properties:\n        ClientName: chesspunk-client-${self:provider.stage}\n        UserPoolId:\n          Ref: CognitoUserPool\n        ExplicitAuthFlows:\n          - ADMIN_NO_SRP_AUTH\n\n    ApiDistribution:\n      Type: AWS::CloudFront::Distribution\n      DependsOn:\n        - HttpApi\n      Properties:\n        DistributionConfig:\n          Enabled: true\n          DefaultCacheBehavior:\n            TargetOriginId: HttpApiOrigin\n            ViewerProtocolPolicy: redirect-to-https\n            AllowedMethods:\n              - GET\n              - HEAD\n              - OPTIONS\n              - PUT\n              - PATCH\n              - POST\n              - DELETE\n            ForwardedValues:\n              QueryString: true\n              Headers:\n                - Authorization\n          Origins:\n            - Id: HttpApiOrigin\n              DomainName: \n                Fn::Join:\n                  - \"\"\n                  - - Ref: HttpApi\n                    - \".execute-api.\"\n                    - \"${self:provider.region}\"\n                    - \".amazonaws.com\"\n              CustomOriginConfig:\n                OriginProtocolPolicy: https-only\n\n    UsersTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: Users\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        BillingMode: PAY_PER_REQUEST\n        \n    CompetitionsTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: Competitions\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        BillingMode: PAY_PER_REQUEST\n\n    MatchesTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: Matches\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        BillingMode: PAY_PER_REQUEST\n\n    CommunitiesTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: Communities\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        BillingMode: PAY_PER_REQUEST\n\n    SocialTable:\n      Type: AWS::DynamoDB::Table\n      Properties:\n        TableName: Social\n        AttributeDefinitions:\n          - AttributeName: id\n            AttributeType: S\n        KeySchema:\n          - AttributeName: id\n            KeyType: HASH\n        BillingMode: PAY_PER_REQUEST\n",
+    "command": [
+      "deploy"
+    ],
+    "options": {
+      "aws-profile": "personal"
+    },
+    "orgId": "846f28d0-053a-44af-81e7-e577b8f29250",
+    "orgName": "ywateba",
+    "userId": "3RQhZmjCyB5Y6JgMbc",
+    "userName": "ywateba",
+    "serviceProviderAwsAccountId": "470769016866",
+    "serviceProviderAwsCfStackName": "chesspunk-serverless-dev",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:470769016866:stack/chesspunk-serverless-dev/3b5313c0-3fca-11f1-8b50-0affcfcff881",
+    "serviceProviderAwsCfStackCreated": "2026-04-24T10:42:03.821Z",
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": "CREATE_COMPLETE",
+    "serviceProviderAwsCfStackOutputs": [
+      {
+        "OutputKey": "DeleteUserLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-deleteUser:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-DeleteUserLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdateCompetitionStatusLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-updateCompetitionStatus:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-UpdateCompetitionStatusLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ListUsersLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-listUsers:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-ListUsersLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ListPostsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-listPosts:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-ListPostsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetCommunityLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-getCommunity:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-GetCommunityLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "UpdateUserLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-updateUser:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-UpdateUserLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "AddMemberToCommunityLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-addMemberToCommunity:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-AddMemberToCommunityLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "GetUserLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-getUser:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-GetUserLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "HttpApiId",
+        "OutputValue": "vhm5bvkzcf",
+        "Description": "Id of the HTTP API",
+        "ExportName": "sls-chesspunk-serverless-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "GetPostLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-getPost:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-GetPostLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ServerlessDeploymentBucketName",
+        "OutputValue": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+        "ExportName": "sls-chesspunk-serverless-dev-ServerlessDeploymentBucketName"
+      },
+      {
+        "OutputKey": "HttpApiUrl",
+        "OutputValue": "https://vhm5bvkzcf.execute-api.us-east-1.amazonaws.com",
+        "Description": "URL of the HTTP API",
+        "ExportName": "sls-chesspunk-serverless-dev-HttpApiUrl"
+      },
+      {
+        "OutputKey": "GetCompetitionLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-getCompetition:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-GetCompetitionLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreateCommunityLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-createCommunity:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-CreateCommunityLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreatePostLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-createPost:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-CreatePostLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreateCommentLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-createComment:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-CreateCommentLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ListCompetitionsLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-listCompetitions:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-ListCompetitionsLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "AddPlayerToCompetitionLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-addPlayerToCompetition:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-AddPlayerToCompetitionLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "ListCommunitiesLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-listCommunities:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-ListCommunitiesLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreateUserLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-createUser:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-CreateUserLambdaFunctionQualifiedArn"
+      },
+      {
+        "OutputKey": "CreateCompetitionLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:470769016866:function:chesspunk-serverless-dev-createCompetition:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-chesspunk-serverless-dev-CreateCompetitionLambdaFunctionQualifiedArn"
+      }
+    ],
+    "compiledCloudFormationTemplate": {
+      "AWSTemplateFormatVersion": "2010-09-09",
+      "Description": "The AWS CloudFormation template for this Serverless application",
+      "Resources": {
+        "ApiLogGroup": {
+          "Type": "AWS::Logs::LogGroup",
+          "Properties": {
+            "LogGroupName": "/aws/lambda/chesspunk-serverless-dev-api"
+          }
+        },
+        "IamRoleLambdaExecution": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+            "AssumeRolePolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com"
+                    ]
+                  },
+                  "Action": [
+                    "sts:AssumeRole"
+                  ]
+                }
+              ]
+            },
+            "Policies": [
+              {
+                "PolicyName": {
+                  "Fn::Join": [
+                    "-",
+                    [
+                      "chesspunk-serverless",
+                      "dev",
+                      "lambda"
+                    ]
+                  ]
+                },
+                "PolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                        "logs:TagResource"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:PutLogEvents"
+                      ],
+                      "Resource": [
+                        {
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/chesspunk-serverless-dev*:*:*"
+                        }
+                      ]
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "dynamodb:*"
+                      ],
+                      "Resource": [
+                        "arn:aws:dynamodb:us-east-1:*:table/Users",
+                        "arn:aws:dynamodb:us-east-1:*:table/Competitions",
+                        "arn:aws:dynamodb:us-east-1:*:table/Matches",
+                        "arn:aws:dynamodb:us-east-1:*:table/Communities",
+                        "arn:aws:dynamodb:us-east-1:*:table/Social"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Path": "/",
+            "RoleName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "chesspunk-serverless",
+                  "dev",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  "lambdaRole"
+                ]
+              ]
+            }
+          }
+        },
+        "ApiLambdaFunction": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+            "Code": {
+              "S3Bucket": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+              "S3Key": "serverless/chesspunk-serverless/dev/1777122647550-2026-04-25T13:10:47.550Z/chesspunk-serverless.zip"
+            },
+            "Handler": "serverless/handler.lambda_handler",
+            "Runtime": "python3.10",
+            "FunctionName": "chesspunk-serverless-dev-api",
+            "MemorySize": 1024,
+            "Timeout": 6,
+            "Role": {
+              "Fn::GetAtt": [
+                "IamRoleLambdaExecution",
+                "Arn"
+              ]
+            }
+          },
+          "DependsOn": [
+            "ApiLogGroup"
+          ]
+        },
+        "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI": {
+          "Type": "AWS::Lambda::Version",
+          "DeletionPolicy": "Retain",
+          "Properties": {
+            "FunctionName": {
+              "Ref": "ApiLambdaFunction"
+            },
+            "CodeSha256": "t3lFwSKxGjLikTwjkeIn8GDDp3fJBmGoG0sluk6IwI8="
+          }
+        },
+        "HttpApi": {
+          "Type": "AWS::ApiGatewayV2::Api",
+          "Properties": {
+            "Name": "dev-chesspunk-serverless",
+            "ProtocolType": "HTTP"
+          }
+        },
+        "HttpApiStage": {
+          "Type": "AWS::ApiGatewayV2::Stage",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "StageName": "$default",
+            "AutoDeploy": true,
+            "DefaultRouteSettings": {
+              "DetailedMetricsEnabled": false
+            }
+          }
+        },
+        "HttpApiAuthorizerCognitoAuthorizer": {
+          "Type": "AWS::ApiGatewayV2::Authorizer",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "Name": "cognitoAuthorizer",
+            "IdentitySource": [
+              "$request.header.Authorization"
+            ],
+            "AuthorizerType": "JWT",
+            "JwtConfiguration": {
+              "Audience": [
+                {
+                  "Ref": "CognitoUserPoolClient"
+                }
+              ],
+              "Issuer": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "https://cognito-idp.",
+                    "us-east-1",
+                    ".amazonaws.com/",
+                    {
+                      "Ref": "CognitoUserPool"
+                    }
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "ApiLambdaPermissionHttpApi": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "FunctionName": {
+              "Fn::GetAtt": [
+                "ApiLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Action": "lambda:InvokeFunction",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:",
+                  {
+                    "Ref": "AWS::Partition"
+                  },
+                  ":execute-api:",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ":",
+                  {
+                    "Ref": "AWS::AccountId"
+                  },
+                  ":",
+                  {
+                    "Ref": "HttpApi"
+                  },
+                  "/*"
+                ]
+              ]
+            }
+          }
+        },
+        "HttpApiIntegrationApi": {
+          "Type": "AWS::ApiGatewayV2::Integration",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "IntegrationType": "AWS_PROXY",
+            "IntegrationUri": {
+              "Fn::GetAtt": [
+                "ApiLambdaFunction",
+                "Arn"
+              ]
+            },
+            "PayloadFormatVersion": "2.0",
+            "TimeoutInMillis": 30000
+          }
+        },
+        "HttpApiRouteAnyProxyVar": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "ANY /{proxy+}",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationApi"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationApi"
+        },
+        "HttpApiRouteAny": {
+          "Type": "AWS::ApiGatewayV2::Route",
+          "Properties": {
+            "ApiId": {
+              "Ref": "HttpApi"
+            },
+            "RouteKey": "ANY /",
+            "Target": {
+              "Fn::Join": [
+                "/",
+                [
+                  "integrations",
+                  {
+                    "Ref": "HttpApiIntegrationApi"
+                  }
+                ]
+              ]
+            }
+          },
+          "DependsOn": "HttpApiIntegrationApi"
+        },
+        "CognitoUserPool": {
+          "Type": "AWS::Cognito::UserPool",
+          "Properties": {
+            "UserPoolName": "chesspunk-pool-dev",
+            "UsernameAttributes": [
+              "email"
+            ],
+            "AutoVerifiedAttributes": [
+              "email"
+            ]
+          }
+        },
+        "CognitoUserPoolClient": {
+          "Type": "AWS::Cognito::UserPoolClient",
+          "Properties": {
+            "ClientName": "chesspunk-client-dev",
+            "UserPoolId": {
+              "Ref": "CognitoUserPool"
+            },
+            "ExplicitAuthFlows": [
+              "ADMIN_NO_SRP_AUTH"
+            ]
+          }
+        },
+        "ApiDistribution": {
+          "Type": "AWS::CloudFront::Distribution",
+          "DependsOn": [
+            "HttpApi"
+          ],
+          "Properties": {
+            "DistributionConfig": {
+              "Enabled": true,
+              "DefaultCacheBehavior": {
+                "TargetOriginId": "HttpApiOrigin",
+                "ViewerProtocolPolicy": "redirect-to-https",
+                "AllowedMethods": [
+                  "GET",
+                  "HEAD",
+                  "OPTIONS",
+                  "PUT",
+                  "PATCH",
+                  "POST",
+                  "DELETE"
+                ],
+                "ForwardedValues": {
+                  "QueryString": true,
+                  "Headers": [
+                    "Authorization"
+                  ]
+                }
+              },
+              "Origins": [
+                {
+                  "Id": "HttpApiOrigin",
+                  "DomainName": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        {
+                          "Ref": "HttpApi"
+                        },
+                        ".execute-api.",
+                        "us-east-1",
+                        ".amazonaws.com"
+                      ]
+                    ]
+                  },
+                  "CustomOriginConfig": {
+                    "OriginProtocolPolicy": "https-only"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "UsersTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "Users",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "id",
+                "KeyType": "HASH"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST"
+          }
+        },
+        "CompetitionsTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "Competitions",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "id",
+                "KeyType": "HASH"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST"
+          }
+        },
+        "MatchesTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "Matches",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "id",
+                "KeyType": "HASH"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST"
+          }
+        },
+        "CommunitiesTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "Communities",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "id",
+                "KeyType": "HASH"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST"
+          }
+        },
+        "SocialTable": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "TableName": "Social",
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "id",
+                "AttributeType": "S"
+              }
+            ],
+            "KeySchema": [
+              {
+                "AttributeName": "id",
+                "KeyType": "HASH"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST"
+          }
+        }
+      },
+      "Outputs": {
+        "ServerlessDeploymentBucketName": {
+          "Value": "serverless-framework-deployments-us-east-1-220ab93e-4a52",
+          "Export": {
+            "Name": "sls-chesspunk-serverless-dev-ServerlessDeploymentBucketName"
+          }
+        },
+        "ApiLambdaFunctionQualifiedArn": {
+          "Description": "Current Lambda function version",
+          "Value": {
+            "Ref": "ApiLambdaVersiongVQGnhZf8FOFgsxQ44oOx4Lt1LqInCjQvF0KdPrtI"
+          },
+          "Export": {
+            "Name": "sls-chesspunk-serverless-dev-ApiLambdaFunctionQualifiedArn"
+          }
+        },
+        "HttpApiId": {
+          "Description": "Id of the HTTP API",
+          "Value": {
+            "Ref": "HttpApi"
+          },
+          "Export": {
+            "Name": "sls-chesspunk-serverless-dev-HttpApiId"
+          }
+        },
+        "HttpApiUrl": {
+          "Description": "URL of the HTTP API",
+          "Value": {
+            "Fn::Join": [
+              "",
+              [
+                "https://",
+                {
+                  "Ref": "HttpApi"
+                },
+                ".execute-api.",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ".",
+                {
+                  "Ref": "AWS::URLSuffix"
+                }
+              ]
+            ]
+          },
+          "Export": {
+            "Name": "sls-chesspunk-serverless-dev-HttpApiUrl"
+          }
+        }
+      }
+    }
+  }
+}
