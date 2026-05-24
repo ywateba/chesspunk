@@ -1,0 +1,101 @@
+service: chesspunk-webapp
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-s3-sync
+
+custom:
+  # Appending stage and account ID to ensure global bucket uniqueness
+  siteName: chesspunk-frontend-${self:provider.stage}-${aws:accountId}
+  s3Sync:
+    - bucketName: ${self:custom.siteName}
+      localDir: dist
+
+resources:
+  Resources:
+    WebAppS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.siteName}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          IgnorePublicAcls: true
+          BlockPublicPolicy: false
+          RestrictPublicBuckets: false
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+
+    WebAppS3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: WebAppS3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource:
+                Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: WebAppS3Bucket
+                    - "/*"
+
+    WebAppCloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName:
+                Fn::Join:
+                  - ""
+                  - - Ref: WebAppS3Bucket
+                    - ".s3-website-"
+                    - Ref: AWS::Region
+                    - ".amazonaws.com"
+              Id: WebApp
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: http-only
+          Enabled: "true"
+          DefaultRootObject: index.html
+          # Essential for Single Page Applications (React Router)
+          CustomErrorResponses:
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            TargetOriginId: WebApp
+            ForwardedValues:
+              QueryString: "false"
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+
+  Outputs:
+    CloudFrontDistributionDomainName:
+      Description: URL of the CloudFront Distribution
+      Value:
+        Fn::GetAtt: [WebAppCloudFrontDistribution, DomainName]
+    CloudFrontDistributionId:
+      Description: ID of the CloudFront Distribution
+      Value:
+        Ref: WebAppCloudFrontDistribution
